@@ -20,27 +20,22 @@ async function main() {
 
   console.log("🌱 Memulai proses seeding database Buku Induk Siswa...");
 
-  // 1. Seed Users (Admin TU & Staf TU)
+  // 1. Seed User Tunggal (Staf TU - Super Admin)
   const insertedUsers = await db
     .insert(schema.users)
     .values([
       {
-        name: "Drs. H. Ahmad Sulaiman, M.Pd.",
-        email: "admin.tu@sekolah.sch.id",
-        passwordHash: "supabase_auth_managed",
-        role: "ADMIN",
-      },
-      {
-        name: "Siti Rahmawati, S.AP.",
+        name: "Mahmud Sulaiman",
+        username: "staftu",
         email: "staf.tu@sekolah.sch.id",
-        passwordHash: "supabase_auth_managed",
+        passwordHash: "admin123",
         role: "STAFF_TU",
       },
     ])
     .onConflictDoNothing()
     .returning();
 
-  console.log(`✅ Users seeded (${insertedUsers.length} akun baru)`);
+  console.log(`✅ User Staf TU seeded (${insertedUsers.length} akun)`);
 
   // 2. Seed Tahun Ajaran
   const insertedYears = await db
@@ -126,4 +121,3 @@ main().catch((err) => {
   console.error("Gagal menjalankan seed:", err);
   process.exit(1);
 });
-

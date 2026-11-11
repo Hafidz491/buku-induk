@@ -16,7 +16,7 @@ import { relations } from "drizzle-orm";
 // ENUMS
 // ==========================================
 
-export const userRoleEnum = pgEnum("user_role", ["ADMIN", "STAFF_TU"]);
+export const userRoleEnum = pgEnum("user_role", ["STAFF_TU"]);
 
 export const genderEnum = pgEnum("gender", ["M", "F"]);
 
@@ -34,11 +34,12 @@ export const statusInClassEnum = pgEnum("status_in_class", [
 ]);
 
 // ==========================================
-// 1. TABEL USERS (Staf TU / Admin)
+// 1. TABEL USERS (Akun Tunggal Staf TU - Super Admin)
 // ==========================================
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 150 }).notNull(),
+  username: varchar("username", { length: 100 }).notNull().unique(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: userRoleEnum("role").default("STAFF_TU").notNull(),
@@ -52,7 +53,7 @@ export const users = pgTable("users", {
 // ==========================================
 export const academicYears = pgTable("academic_years", {
   id: uuid("id").defaultRandom().primaryKey(),
-  name: varchar("name", { length: 100 }).notNull().unique(), // Contoh: "2025/2026 Ganjil"
+  name: varchar("name", { length: 100 }).notNull().unique(),
   isActive: boolean("is_active").default(false).notNull(),
 });
 
@@ -61,8 +62,8 @@ export const academicYears = pgTable("academic_years", {
 // ==========================================
 export const classes = pgTable("classes", {
   id: uuid("id").defaultRandom().primaryKey(),
-  name: varchar("name", { length: 100 }).notNull().unique(), // Contoh: "X IPA 1", "XI IPS 2"
-  gradeLevel: integer("grade_level").notNull(), // Contoh: 10, 11, 12
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  gradeLevel: integer("grade_level").notNull(),
 });
 
 // ==========================================
@@ -169,4 +170,3 @@ export type NewStudent = typeof students.$inferInsert;
 
 export type StudentClassHistory = typeof studentClassHistory.$inferSelect;
 export type NewStudentClassHistory = typeof studentClassHistory.$inferInsert;
-
