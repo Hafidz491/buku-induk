@@ -5,22 +5,25 @@ import Link from "next/link";
 import {
   Plus,
   CheckCircle2,
-  Trash2,
   Printer,
   Calendar,
   BookOpen,
+  X,
+  Users,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useSchool } from "@/lib/school-store";
+import type { SchoolClass } from "@/db/schema";
+import { formatTanggalIndo } from "@/lib/utils";
 
 export default function ClassesAndAcademicYearsPage() {
   const {
     classes,
+    students,
     academicYears,
     activeAcademicYear,
     classHistory,
     addClass,
-    deleteClass,
     addAcademicYear,
     setActiveAcademicYear,
   } = useSchool();
@@ -28,6 +31,9 @@ export default function ClassesAndAcademicYearsPage() {
   const [newClassName, setNewClassName] = useState("");
   const [newGradeLevel, setNewGradeLevel] = useState<number>(10);
   const [newYearName, setNewYearName] = useState("");
+
+  // State Modal Anggota Rombel
+  const [viewingClass, setViewingClass] = useState<SchoolClass | null>(null);
 
   const handleAddClass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +54,26 @@ export default function ClassesAndAcademicYearsPage() {
     });
     setNewYearName("");
   };
+
+  // Data siswa yang menjadi Anggota Rombel pada Tahun Ajaran Aktif
+  const studentsInViewingClass = viewingClass
+    ? classHistory
+        .filter(
+          (h) =>
+            h.classId === viewingClass.id &&
+            h.academicYearId === activeAcademicYear?.id
+        )
+        .map((h) => {
+          const student = students.find((s) => s.id === h.studentId);
+          return student
+            ? {
+                ...student,
+                statusInClass: h.statusInClass,
+              }
+            : null;
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null)
+    : [];
 
   return (
     <AppShell>
@@ -112,7 +138,7 @@ export default function ClassesAndAcademicYearsPage() {
               </div>
             </form>
 
-            {/* Tabel Kelas */}
+            {/* Daftar Rombel (Tombol Icon Anggota Rombel di Sebelah Cetak Presensi) */}
             <div className="divide-y divide-slate-100">
               {classes.map((cls) => {
                 const count = classHistory.filter(
@@ -131,29 +157,30 @@ export default function ClassesAndAcademicYearsPage() {
                         {cls.name}
                       </p>
                       <p className="text-xs text-slate-400">
-                        Tingkat Kelas {cls.gradeLevel} • {count} Siswa di TA{" "}
-                        {activeAcademicYear?.name}
+                        Tingkat Kelas {cls.gradeLevel} • {count} Anggota Rombel
+                        di TA {activeAcademicYear?.name}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Tombol Icon Anggota Rombel (Hanya Icon di Sebelah Cetak Presensi) */}
+                      <button
+                        type="button"
+                        onClick={() => setViewingClass(cls)}
+                        title={`Anggota Rombel ${cls.name}`}
+                        aria-label={`Anggota Rombel ${cls.name}`}
+                        className="h-8 w-8 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100 inline-flex items-center justify-center transition"
+                      >
+                        <Users className="h-4 w-4" />
+                      </button>
+
                       <Link
                         href={`/print-attendance?classId=${cls.id}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition"
                       >
                         <Printer className="h-3.5 w-3.5" />
                         Cetak Presensi
                       </Link>
-                      {count === 0 && (
-                        <button
-                          type="button"
-                          onClick={() => deleteClass(cls.id)}
-                          title="Hapus Rombel Kosong"
-                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
                     </div>
                   </div>
                 );
@@ -232,6 +259,153 @@ export default function ClassesAndAcademicYearsPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Anggota Rombel (Berisi Tabel Data Lengkap Siswa di Rombel Tersebut) */}
+      {viewingClass && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-5xl rounded-2xl bg-white shadow-xl border border-slate-100 overflow-hidden my-8">
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-sky-500 text-white flex items-center justify-center">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">
+                    Anggota Rombel — Kelas {viewingClass.name}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Tingkat {viewingClass.gradeLevel} • Tahun Ajaran{" "}
+                    {activeAcademicYear?.name} • Total{" "}
+                    {studentsInViewingClass.length} Siswa
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingClass(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              {studentsInViewingClass.length > 0 ? (
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-100/80 text-slate-700 border-b border-slate-200">
+                        <th className="py-2.5 px-3 font-bold">No</th>
+                        <th className="py-2.5 px-3 font-bold">NISN / NIS</th>
+                        <th className="py-2.5 px-3 font-bold">Nama Lengkap</th>
+                        <th className="py-2.5 px-3 font-bold">L/P</th>
+                        <th className="py-2.5 px-3 font-bold">
+                          Tempat, Tgl Lahir
+                        </th>
+                        <th className="py-2.5 px-3 font-bold">
+                          Alamat Lengkap
+                        </th>
+                        <th className="py-2.5 px-3 font-bold">
+                          Orang Tua (Ayah & Ibu)
+                        </th>
+                        <th className="py-2.5 px-3 font-bold text-right">
+                          Aksi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {studentsInViewingClass.map((std, index) => (
+                        <tr key={std.id} className="hover:bg-slate-50/80">
+                          <td className="py-2.5 px-3 font-semibold text-slate-500">
+                            {index + 1}
+                          </td>
+                          <td className="py-2.5 px-3 font-mono">
+                            <p className="font-bold text-slate-800">
+                              {std.nisn}
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              NIS: {std.nis}
+                            </p>
+                          </td>
+                          <td className="py-2.5 px-3 font-bold text-slate-800">
+                            {std.fullName}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span
+                              className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold ${
+                                std.gender === "M"
+                                  ? "bg-sky-100 text-sky-700"
+                                  : "bg-pink-100 text-pink-700"
+                              }`}
+                            >
+                              {std.gender === "M" ? "L" : "P"}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600">
+                            <p className="font-medium text-slate-700">
+                              {std.birthPlace}
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              {formatTanggalIndo(std.birthDate)}
+                            </p>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 max-w-[220px]">
+                            <p className="text-slate-700">
+                              {std.streetAddress}, RT/RW {std.rtRw}
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              Kel. {std.village}, Kec. {std.district},{" "}
+                              {std.city}, {std.province}
+                            </p>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600">
+                            <p>
+                              <span className="font-semibold text-slate-700">
+                                Ayah:
+                              </span>{" "}
+                              {std.fatherName} ({std.fatherPhone})
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                              <span className="font-semibold text-slate-700">
+                                Ibu:
+                              </span>{" "}
+                              {std.motherName} ({std.motherPhone})
+                            </p>
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <Link
+                              href={`/students/${std.id}`}
+                              className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-xs transition"
+                            >
+                              Detail
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="py-12 text-center text-xs text-slate-400">
+                  Belum ada anggota rombel di kelas{" "}
+                  <strong>{viewingClass.name}</strong> pada Tahun Ajaran{" "}
+                  <strong>{activeAcademicYear?.name}</strong>.
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setViewingClass(null)}
+                className="px-4 h-9 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

@@ -77,9 +77,18 @@ export const students = pgTable("students", {
   gender: genderEnum("gender").notNull(),
   birthPlace: varchar("birth_place", { length: 100 }).notNull(),
   birthDate: date("birth_date", { mode: "string" }).notNull(),
-  address: text("address").notNull(),
-  parentName: varchar("parent_name", { length: 200 }).notNull(),
-  parentPhone: varchar("parent_phone", { length: 30 }).notNull(),
+  // Alamat Terstruktur (Jalan, RT/RW, Kelurahan, Kecamatan, Kab/Kota, Provinsi)
+  streetAddress: text("street_address").notNull(),
+  rtRw: varchar("rt_rw", { length: 30 }).notNull(),
+  village: varchar("village", { length: 100 }).notNull(),
+  district: varchar("district", { length: 100 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  province: varchar("province", { length: 100 }).notNull(),
+  // Data Orang Tua (Ayah & Ibu beserta No. HP masing-masing yang bersifat opsional)
+  fatherName: varchar("father_name", { length: 200 }).notNull(),
+  fatherPhone: varchar("father_phone", { length: 30 }).default("").notNull(),
+  motherName: varchar("mother_name", { length: 200 }).notNull(),
+  motherPhone: varchar("mother_phone", { length: 30 }).default("").notNull(),
   entryYear: integer("entry_year").notNull(),
   status: studentStatusEnum("status").default("ACTIVE").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -67,9 +67,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "M",
     birthPlace: "Bandung",
     birthDate: "2009-04-12",
-    address: "Jl. Merdeka No. 12, RT 02/RW 05, Kec. Coblong, Kota Bandung",
-    parentName: "Budi Santoso",
-    parentPhone: "081234567801",
+    streetAddress: "Jl. Merdeka No. 12",
+    rtRw: "002/005",
+    village: "Dago",
+    district: "Coblong",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Budi Santoso",
+    fatherPhone: "081234567801",
+    motherName: "Rina Wulandari",
+    motherPhone: "081298765401",
     entryYear: 2025,
     status: "ACTIVE",
     createdAt: new Date("2025-07-10T08:00:00Z"),
@@ -83,9 +90,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "F",
     birthPlace: "Jakarta",
     birthDate: "2009-08-23",
-    address: "Jl. Diponegoro No. 88, Kec. Bandung Wetan, Kota Bandung",
-    parentName: "Hendra Wijaya",
-    parentPhone: "081234567802",
+    streetAddress: "Jl. Diponegoro No. 88",
+    rtRw: "004/002",
+    village: "Citarum",
+    district: "Bandung Wetan",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Hendra Wijaya",
+    fatherPhone: "081234567802",
+    motherName: "Dewi Sartika",
+    motherPhone: "081298765402",
     entryYear: 2025,
     status: "ACTIVE",
     createdAt: new Date("2025-07-10T08:15:00Z"),
@@ -99,9 +113,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "M",
     birthPlace: "Surabaya",
     birthDate: "2010-01-15",
-    address: "Komp. Griya Asri Blok C4 No. 7, Kec. Sukasari, Kota Bandung",
-    parentName: "Eko Wibowo",
-    parentPhone: "081234567803",
+    streetAddress: "Komp. Griya Asri Blok C4 No. 7",
+    rtRw: "001/008",
+    village: "Gegerkalong",
+    district: "Sukasari",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Eko Wibowo",
+    fatherPhone: "081234567803",
+    motherName: "Sri Wahyuni",
+    motherPhone: "081298765403",
     entryYear: 2025,
     status: "ACTIVE",
     createdAt: new Date("2025-07-11T09:00:00Z"),
@@ -115,9 +136,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "F",
     birthPlace: "Yogyakarta",
     birthDate: "2009-11-04",
-    address: "Jl. Cihampelas No. 142, Kec. Coblong, Kota Bandung",
-    parentName: "Dedi Kurniawan",
-    parentPhone: "081234567804",
+    streetAddress: "Jl. Cihampelas No. 142",
+    rtRw: "003/004",
+    village: "Cipaganti",
+    district: "Coblong",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Dedi Kurniawan",
+    fatherPhone: "081234567804",
+    motherName: "Yuni Astuti",
+    motherPhone: "081298765404",
     entryYear: 2025,
     status: "ACTIVE",
     createdAt: new Date("2025-07-11T09:30:00Z"),
@@ -131,9 +159,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "M",
     birthPlace: "Semarang",
     birthDate: "2008-05-19",
-    address: "Jl. Buah Batu No. 54, Kec. Lengkong, Kota Bandung",
-    parentName: "Agus Saputra",
-    parentPhone: "081234567805",
+    streetAddress: "Jl. Buah Batu No. 54",
+    rtRw: "005/003",
+    village: "Burangrang",
+    district: "Lengkong",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Agus Saputra",
+    fatherPhone: "081234567805",
+    motherName: "Lilis Suryani",
+    motherPhone: "081298765405",
     entryYear: 2024,
     status: "ACTIVE",
     createdAt: new Date("2024-07-12T08:00:00Z"),
@@ -147,9 +182,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "F",
     birthPlace: "Bandung",
     birthDate: "2008-09-28",
-    address: "Jl. Dago Asri II No. 19, Kec. Coblong, Kota Bandung",
-    parentName: "Ridwan Hakim",
-    parentPhone: "081234567806",
+    streetAddress: "Jl. Dago Asri II No. 19",
+    rtRw: "002/007",
+    village: "Dago",
+    district: "Coblong",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Ridwan Hakim",
+    fatherPhone: "081234567806",
+    motherName: "Nurhayati",
+    motherPhone: "081298765406",
     entryYear: 2024,
     status: "ACTIVE",
     createdAt: new Date("2024-07-12T08:20:00Z"),
@@ -163,9 +205,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "M",
     birthPlace: "Bogor",
     birthDate: "2007-10-08",
-    address: "Jl. Setiabudi No. 210, Kec. Sukasari, Kota Bandung",
-    parentName: "Lukman Hakim",
-    parentPhone: "081234567807",
+    streetAddress: "Jl. Setiabudi No. 210",
+    rtRw: "006/001",
+    village: "Isola",
+    district: "Sukasari",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Lukman Hakim",
+    fatherPhone: "081234567807",
+    motherName: "Ratna Sari",
+    motherPhone: "081298765407",
     entryYear: 2023,
     status: "ACTIVE",
     createdAt: new Date("2023-07-14T08:00:00Z"),
@@ -179,9 +228,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "F",
     birthPlace: "Garut",
     birthDate: "2007-12-02",
-    address: "Jl. Pasirkaliki No. 73, Kec. Cicendo, Kota Bandung",
-    parentName: "Taufik Hidayat",
-    parentPhone: "081234567808",
+    streetAddress: "Jl. Pasirkaliki No. 73",
+    rtRw: "003/006",
+    village: "Arjuna",
+    district: "Cicendo",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Taufik Hidayat",
+    fatherPhone: "081234567808",
+    motherName: "Nenden Hasanah",
+    motherPhone: "081298765408",
     entryYear: 2023,
     status: "ACTIVE",
     createdAt: new Date("2023-07-14T08:30:00Z"),
@@ -195,9 +251,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "M",
     birthPlace: "Cimahi",
     birthDate: "2006-03-21",
-    address: "Jl. Gatot Subroto No. 31, Kota Bandung",
-    parentName: "Surya Maulana",
-    parentPhone: "081234567809",
+    streetAddress: "Jl. Gatot Subroto No. 31",
+    rtRw: "001/002",
+    village: "Lingkar Selatan",
+    district: "Lengkong",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Surya Maulana",
+    fatherPhone: "081234567809",
+    motherName: "Wati Susilawati",
+    motherPhone: "081298765409",
     entryYear: 2022,
     status: "GRADUATED",
     createdAt: new Date("2022-07-15T08:00:00Z"),
@@ -211,9 +274,16 @@ const INITIAL_STUDENTS: Student[] = [
     gender: "F",
     birthPlace: "Bekasi",
     birthDate: "2008-07-14",
-    address: "Jl. Soekarno Hatta No. 402, Kota Bandung",
-    parentName: "Wahyu Nugroho",
-    parentPhone: "081234567810",
+    streetAddress: "Jl. Soekarno Hatta No. 402",
+    rtRw: "004/009",
+    village: "Kebon Lega",
+    district: "Bojongloa Kidul",
+    city: "Kota Bandung",
+    province: "Jawa Barat",
+    fatherName: "Wahyu Nugroho",
+    fatherPhone: "081234567810",
+    motherName: "Indah Permatasari",
+    motherPhone: "081298765410",
     entryYear: 2024,
     status: "TRANSFERRED",
     createdAt: new Date("2024-07-12T09:00:00Z"),
@@ -355,6 +425,9 @@ interface SchoolContextValue {
   addClass: (payload: Omit<SchoolClass, "id">) => void;
   deleteClass: (id: string) => void;
   addStudent: (payload: StudentFormInput) => Student;
+  bulkImportStudents: (
+    rows: (StudentFormInput & { className?: string })[]
+  ) => { importedCount: number; skippedCount: number };
   updateStudent: (id: string, payload: StudentFormInput) => void;
   deleteStudent: (id: string) => void;
   assignStudentToClass: (payload: Omit<StudentClassHistory, "id">) => void;
@@ -363,7 +436,7 @@ interface SchoolContextValue {
 
 const SchoolContext = createContext<SchoolContextValue | null>(null);
 
-const STORAGE_KEY = "sim_buku_induk_state_v2";
+const STORAGE_KEY = "sim_buku_induk_state_v3";
 
 export function SchoolProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User>(INITIAL_SINGLE_USER);
@@ -504,9 +577,16 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       gender: payload.gender,
       birthPlace: payload.birthPlace.trim(),
       birthDate: payload.birthDate,
-      address: payload.address.trim(),
-      parentName: payload.parentName.trim(),
-      parentPhone: payload.parentPhone.trim(),
+      streetAddress: payload.streetAddress.trim(),
+      rtRw: payload.rtRw.trim(),
+      village: payload.village.trim(),
+      district: payload.district.trim(),
+      city: payload.city.trim(),
+      province: payload.province.trim(),
+      fatherName: payload.fatherName.trim(),
+      fatherPhone: (payload.fatherPhone || "").trim(),
+      motherName: payload.motherName.trim(),
+      motherPhone: (payload.motherPhone || "").trim(),
       entryYear: Number(payload.entryYear),
       status: payload.status,
       createdAt: now,
@@ -515,7 +595,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
 
     setStudents((prev) => [newStudent, ...prev]);
 
-    if (payload.classId) {
+    if (payload.classId && payload.classId.trim() !== "") {
       const targetYearId = payload.academicYearId || activeAcademicYear.id;
       setClassHistory((prev) => [
         ...prev,
@@ -532,6 +612,91 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     return newStudent;
   };
 
+  const bulkImportStudents = (
+    rows: (StudentFormInput & { className?: string })[]
+  ) => {
+    const existingNisns = new Set(students.map((s) => s.nisn.trim()));
+    const existingNis = new Set(students.map((s) => s.nis.trim()));
+
+    const newStudentsList: Student[] = [];
+    const newHistoriesList: StudentClassHistory[] = [];
+    let skippedCount = 0;
+    const now = new Date();
+
+    rows.forEach((row, idx) => {
+      const cleanNisn = row.nisn.trim();
+      const cleanNis = row.nis.trim();
+      const cleanName = row.fullName.trim();
+
+      if (
+        !cleanNisn ||
+        !cleanNis ||
+        !cleanName ||
+        existingNisns.has(cleanNisn) ||
+        existingNis.has(cleanNis)
+      ) {
+        skippedCount++;
+        return;
+      }
+
+      existingNisns.add(cleanNisn);
+      existingNis.add(cleanNis);
+
+      const studentId = `std-imp-${Date.now()}-${idx}`;
+      newStudentsList.push({
+        id: studentId,
+        nisn: cleanNisn,
+        nis: cleanNis,
+        fullName: cleanName,
+        gender: row.gender,
+        birthPlace: row.birthPlace.trim() || "-",
+        birthDate: row.birthDate || "2009-01-01",
+        streetAddress: row.streetAddress.trim() || "-",
+        rtRw: row.rtRw.trim() || "001/001",
+        village: row.village.trim() || "-",
+        district: row.district.trim() || "-",
+        city: row.city.trim() || "-",
+        province: row.province.trim() || "-",
+        fatherName: row.fatherName.trim() || "-",
+        fatherPhone: (row.fatherPhone || "").trim(),
+        motherName: row.motherName.trim() || "-",
+        motherPhone: (row.motherPhone || "").trim(),
+        entryYear: Number(row.entryYear) || now.getFullYear(),
+        status: row.status || "ACTIVE",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      // Hanya masukkan ke rombel jika kolom Kelas diisi di Excel
+      if (row.className && row.className.trim() !== "") {
+        const matchedClass = classes.find(
+          (c) => c.name.toLowerCase() === row.className!.trim().toLowerCase()
+        );
+        if (matchedClass) {
+          newHistoriesList.push({
+            id: `sch-imp-${Date.now()}-${idx}`,
+            studentId,
+            classId: matchedClass.id,
+            academicYearId: activeAcademicYear.id,
+            statusInClass: "NEW",
+          });
+        }
+      }
+    });
+
+    if (newStudentsList.length > 0) {
+      setStudents((prev) => [...newStudentsList, ...prev]);
+    }
+    if (newHistoriesList.length > 0) {
+      setClassHistory((prev) => [...prev, ...newHistoriesList]);
+    }
+
+    return {
+      importedCount: newStudentsList.length,
+      skippedCount,
+    };
+  };
+
   const updateStudent = (id: string, payload: StudentFormInput) => {
     const now = new Date();
     setStudents((prev) =>
@@ -545,9 +710,16 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
               gender: payload.gender,
               birthPlace: payload.birthPlace.trim(),
               birthDate: payload.birthDate,
-              address: payload.address.trim(),
-              parentName: payload.parentName.trim(),
-              parentPhone: payload.parentPhone.trim(),
+              streetAddress: payload.streetAddress.trim(),
+              rtRw: payload.rtRw.trim(),
+              village: payload.village.trim(),
+              district: payload.district.trim(),
+              city: payload.city.trim(),
+              province: payload.province.trim(),
+              fatherName: payload.fatherName.trim(),
+              fatherPhone: (payload.fatherPhone || "").trim(),
+              motherName: payload.motherName.trim(),
+              motherPhone: (payload.motherPhone || "").trim(),
               entryYear: Number(payload.entryYear),
               status: payload.status,
               updatedAt: now,
@@ -556,8 +728,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
-    if (payload.classId) {
-      const targetYearId = payload.academicYearId || activeAcademicYear.id;
+    const targetYearId = payload.academicYearId || activeAcademicYear.id;
+    if (payload.classId && payload.classId.trim() !== "") {
       setClassHistory((prev) => {
         const existingIndex = prev.findIndex(
           (h) => h.studentId === id && h.academicYearId === targetYearId
@@ -583,6 +755,13 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           },
         ];
       });
+    } else {
+      // Jika kelas dikosongkan, hapus penempatan pada tahun ajaran tersebut
+      setClassHistory((prev) =>
+        prev.filter(
+          (h) => !(h.studentId === id && h.academicYearId === targetYearId)
+        )
+      );
     }
   };
 
@@ -638,6 +817,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         addClass,
         deleteClass,
         addStudent,
+        bulkImportStudents,
         updateStudent,
         deleteStudent,
         assignStudentToClass,
