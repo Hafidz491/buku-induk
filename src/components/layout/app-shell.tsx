@@ -224,9 +224,6 @@ export function AppShell({ children }: AppShellProps) {
                     TA {activeAcademicYear?.name}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 hidden sm:block">
-                  {currentUser.name} (@{currentUser.username}) • Staf Tata Usaha
-                </p>
               </div>
             </div>
 

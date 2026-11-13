@@ -228,11 +228,10 @@ export default function StudentsBukuIndukPage() {
         header: "L/P",
         cell: ({ row }) => (
           <span
-            className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold ${
-              row.original.gender === "M"
+            className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold ${row.original.gender === "M"
                 ? "bg-sky-100 text-sky-700"
                 : "bg-pink-100 text-pink-700"
-            }`}
+              }`}
           >
             {row.original.gender === "M" ? "L" : "P"}
           </span>
@@ -359,7 +358,7 @@ export default function StudentsBukuIndukPage() {
               Buku Induk Siswa
             </h2>
             <p className="text-xs text-slate-500">
-              Kelola data identitas permanen siswa (`students`), import massal dari Excel, pencarian instan, dan filter kelas.
+              Kelola data identitas permanen siswa, import massal dari Excel, pencarian instan, dan filter kelas.
             </p>
           </div>
 
@@ -479,9 +478,9 @@ export default function StudentsBukuIndukPage() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   ))}
                 </TableRow>

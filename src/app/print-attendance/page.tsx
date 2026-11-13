@@ -105,7 +105,7 @@ function PrintAttendanceContent() {
               Cetak Lembar Absensi Fisik
             </h2>
             <p className="text-xs text-slate-500">
-              Pilih Kelas dan Bulan untuk mencetak lembar daftar hadir manual ber-Kop Sekolah dalam format Potret A4.
+              Pilih Kelas dan Bulan untuk mencetak lembar daftar hadir.
             </p>
           </div>
 
@@ -361,7 +361,7 @@ function PrintAttendanceContent() {
             <p className="font-semibold mt-0.5">
               Wali Kelas,
             </p>
-            <div className="h-16" />
+            <div className="h-14" />
             <p className="font-bold underline">
               {homeroomTeacher.trim()
                 ? homeroomTeacher

@@ -250,15 +250,6 @@ export default function DashboardPage() {
               <h3 className="text-lg font-bold text-slate-800">
                 Rombongan Belajar (Rombel)
               </h3>
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/print-attendance"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition"
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                  Cetak Lembar Absensi
-                </Link>
-              </div>
             </div>
 
             {/* Tab Filter Tingkat Kelas */}

@@ -60,21 +60,21 @@ export default function ClassesAndAcademicYearsPage() {
   // Data siswa yang menjadi Anggota Rombel pada Tahun Ajaran Aktif
   const studentsInViewingClass = viewingClass
     ? classHistory
-        .filter(
-          (h) =>
-            h.classId === viewingClass.id &&
-            h.academicYearId === activeAcademicYear?.id
-        )
-        .map((h) => {
-          const student = students.find((s) => s.id === h.studentId);
-          return student
-            ? {
-                ...student,
-                statusInClass: h.statusInClass,
-              }
-            : null;
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null)
+      .filter(
+        (h) =>
+          h.classId === viewingClass.id &&
+          h.academicYearId === activeAcademicYear?.id
+      )
+      .map((h) => {
+        const student = students.find((s) => s.id === h.studentId);
+        return student
+          ? {
+            ...student,
+            statusInClass: h.statusInClass,
+          }
+          : null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
     : [];
 
   return (
@@ -86,7 +86,7 @@ export default function ClassesAndAcademicYearsPage() {
               Manajemen Rombongan Belajar (Kelas) & Tahun Ajaran
             </h2>
             <p className="text-xs text-slate-500">
-              Kelola daftar kelas (`classes`) dan periode akademik (`academic_years`) sebagai dasar penempatan siswa & cetak presensi.
+              Kelola daftar kelas dan periode akademik sebagai dasar penempatan siswa & cetak presensi.
             </p>
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function ClassesAndAcademicYearsPage() {
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-sky-500" />
               <h3 className="text-base font-bold text-slate-800">
-                Tahun Ajaran (`academic_years`)
+                Tahun Ajaran
               </h3>
             </div>
 
@@ -236,11 +236,10 @@ export default function ClassesAndAcademicYearsPage() {
               {academicYears.map((yr) => (
                 <div
                   key={yr.id}
-                  className={`p-3.5 rounded-xl border flex items-center justify-between ${
-                    yr.isActive
+                  className={`p-3.5 rounded-xl border flex items-center justify-between ${yr.isActive
                       ? "bg-emerald-50/60 border-emerald-200"
                       : "bg-white border-slate-200/80"
-                  }`}
+                    }`}
                 >
                   <div>
                     <p className="text-sm font-bold text-slate-800">
@@ -329,11 +328,10 @@ export default function ClassesAndAcademicYearsPage() {
                           </td>
                           <td className="py-2.5 px-4">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                                std.gender === "M"
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${std.gender === "M"
                                   ? "bg-sky-100 text-sky-700"
                                   : "bg-pink-100 text-pink-700"
-                              }`}
+                                }`}
                             >
                               {std.gender === "M" ? "Laki-Laki" : "Perempuan"}
                             </span>
