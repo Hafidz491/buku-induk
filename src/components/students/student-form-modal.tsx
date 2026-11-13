@@ -523,12 +523,10 @@ export function StudentFormModal({
                 }
                 className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
               >
-                <option value="ACTIVE">AKTIF (Active)</option>
-                <option value="GRADUATED">LULUS (Graduated)</option>
-                <option value="TRANSFERRED">
-                  PINDAH / MUTASI (Transferred)
-                </option>
-                <option value="DROPPED_OUT">KELUAR / DO (Dropped Out)</option>
+                <option value="ACTIVE">AKTIF</option>
+                <option value="GRADUATED">LULUS</option>
+                <option value="TRANSFERRED">PINDAH / MUTASI</option>
+                <option value="DROPPED_OUT">KELUAR / DO</option>
               </select>
             </div>
           </div>
@@ -586,9 +584,9 @@ export function StudentFormModal({
                   }
                   className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white"
                 >
-                  <option value="NEW">Siswa Baru (NEW)</option>
-                  <option value="PROMOTED">Naik Kelas (PROMOTED)</option>
-                  <option value="RETAINED">Tinggal Kelas (RETAINED)</option>
+                  <option value="NEW">Siswa Baru</option>
+                  <option value="PROMOTED">Naik Kelas</option>
+                  <option value="RETAINED">Tinggal Kelas</option>
                 </select>
               </div>
             </div>

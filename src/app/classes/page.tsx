@@ -10,11 +10,11 @@ import {
   BookOpen,
   X,
   Users,
+  Trash2,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useSchool } from "@/lib/school-store";
 import type { SchoolClass } from "@/db/schema";
-import { formatTanggalIndo } from "@/lib/utils";
 
 export default function ClassesAndAcademicYearsPage() {
   const {
@@ -24,6 +24,7 @@ export default function ClassesAndAcademicYearsPage() {
     activeAcademicYear,
     classHistory,
     addClass,
+    deleteClass,
     addAcademicYear,
     setActiveAcademicYear,
   } = useSchool();
@@ -32,8 +33,9 @@ export default function ClassesAndAcademicYearsPage() {
   const [newGradeLevel, setNewGradeLevel] = useState<number>(10);
   const [newYearName, setNewYearName] = useState("");
 
-  // State Modal Anggota Rombel
+  // State Modal Anggota Rombel & Konfirmasi Hapus Rombel
   const [viewingClass, setViewingClass] = useState<SchoolClass | null>(null);
+  const [deletingClass, setDeletingClass] = useState<SchoolClass | null>(null);
 
   const handleAddClass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +140,7 @@ export default function ClassesAndAcademicYearsPage() {
               </div>
             </form>
 
-            {/* Daftar Rombel (Tombol Icon Anggota Rombel di Sebelah Cetak Presensi) */}
+            {/* Daftar Rombel */}
             <div className="divide-y divide-slate-100">
               {classes.map((cls) => {
                 const count = classHistory.filter(
@@ -163,7 +165,7 @@ export default function ClassesAndAcademicYearsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Tombol Icon Anggota Rombel (Hanya Icon di Sebelah Cetak Presensi) */}
+                      {/* Tombol Icon Anggota Rombel */}
                       <button
                         type="button"
                         onClick={() => setViewingClass(cls)}
@@ -174,6 +176,7 @@ export default function ClassesAndAcademicYearsPage() {
                         <Users className="h-4 w-4" />
                       </button>
 
+                      {/* Tombol Cetak Presensi */}
                       <Link
                         href={`/print-attendance?classId=${cls.id}`}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition"
@@ -181,6 +184,17 @@ export default function ClassesAndAcademicYearsPage() {
                         <Printer className="h-3.5 w-3.5" />
                         Cetak Presensi
                       </Link>
+
+                      {/* Tombol Icon Hapus Rombel */}
+                      <button
+                        type="button"
+                        onClick={() => setDeletingClass(cls)}
+                        title={`Hapus Rombel ${cls.name}`}
+                        aria-label={`Hapus Rombel ${cls.name}`}
+                        className="h-8 w-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 inline-flex items-center justify-center transition"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -260,10 +274,10 @@ export default function ClassesAndAcademicYearsPage() {
         </div>
       </div>
 
-      {/* Modal Anggota Rombel (Berisi Tabel Data Lengkap Siswa di Rombel Tersebut) */}
+      {/* Modal Anggota Rombel (Hanya Menampilkan NISN, NAMA, dan JENIS KELAMIN) */}
       {viewingClass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="w-full max-w-5xl rounded-2xl bg-white shadow-xl border border-slate-100 overflow-hidden my-8">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-slate-100 overflow-hidden my-8">
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="h-9 w-9 rounded-xl bg-sky-500 text-white flex items-center justify-center">
@@ -295,90 +309,34 @@ export default function ClassesAndAcademicYearsPage() {
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-slate-100/80 text-slate-700 border-b border-slate-200">
-                        <th className="py-2.5 px-3 font-bold">No</th>
-                        <th className="py-2.5 px-3 font-bold">NISN / NIS</th>
-                        <th className="py-2.5 px-3 font-bold">Nama Lengkap</th>
-                        <th className="py-2.5 px-3 font-bold">L/P</th>
-                        <th className="py-2.5 px-3 font-bold">
-                          Tempat, Tgl Lahir
-                        </th>
-                        <th className="py-2.5 px-3 font-bold">
-                          Alamat Lengkap
-                        </th>
-                        <th className="py-2.5 px-3 font-bold">
-                          Orang Tua (Ayah & Ibu)
-                        </th>
-                        <th className="py-2.5 px-3 font-bold text-right">
-                          Aksi
-                        </th>
+                        <th className="py-2.5 px-4 font-bold w-12">No</th>
+                        <th className="py-2.5 px-4 font-bold">NISN</th>
+                        <th className="py-2.5 px-4 font-bold">Nama</th>
+                        <th className="py-2.5 px-4 font-bold">Jenis Kelamin</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {studentsInViewingClass.map((std, index) => (
                         <tr key={std.id} className="hover:bg-slate-50/80">
-                          <td className="py-2.5 px-3 font-semibold text-slate-500">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500">
                             {index + 1}
                           </td>
-                          <td className="py-2.5 px-3 font-mono">
-                            <p className="font-bold text-slate-800">
-                              {std.nisn}
-                            </p>
-                            <p className="text-[11px] text-slate-400">
-                              NIS: {std.nis}
-                            </p>
+                          <td className="py-2.5 px-4 font-mono font-bold text-slate-800">
+                            {std.nisn}
                           </td>
-                          <td className="py-2.5 px-3 font-bold text-slate-800">
+                          <td className="py-2.5 px-4 font-bold text-slate-800">
                             {std.fullName}
                           </td>
-                          <td className="py-2.5 px-3">
+                          <td className="py-2.5 px-4">
                             <span
-                              className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold ${
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                                 std.gender === "M"
                                   ? "bg-sky-100 text-sky-700"
                                   : "bg-pink-100 text-pink-700"
                               }`}
                             >
-                              {std.gender === "M" ? "L" : "P"}
+                              {std.gender === "M" ? "Laki-Laki" : "Perempuan"}
                             </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-slate-600">
-                            <p className="font-medium text-slate-700">
-                              {std.birthPlace}
-                            </p>
-                            <p className="text-[11px] text-slate-400">
-                              {formatTanggalIndo(std.birthDate)}
-                            </p>
-                          </td>
-                          <td className="py-2.5 px-3 text-slate-600 max-w-[220px]">
-                            <p className="text-slate-700">
-                              {std.streetAddress}, RT/RW {std.rtRw}
-                            </p>
-                            <p className="text-[11px] text-slate-400">
-                              Kel. {std.village}, Kec. {std.district},{" "}
-                              {std.city}, {std.province}
-                            </p>
-                          </td>
-                          <td className="py-2.5 px-3 text-slate-600">
-                            <p>
-                              <span className="font-semibold text-slate-700">
-                                Ayah:
-                              </span>{" "}
-                              {std.fatherName} ({std.fatherPhone})
-                            </p>
-                            <p className="text-[11px] text-slate-500">
-                              <span className="font-semibold text-slate-700">
-                                Ibu:
-                              </span>{" "}
-                              {std.motherName} ({std.motherPhone})
-                            </p>
-                          </td>
-                          <td className="py-2.5 px-3 text-right">
-                            <Link
-                              href={`/students/${std.id}`}
-                              className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-xs transition"
-                            >
-                              Detail
-                            </Link>
                           </td>
                         </tr>
                       ))}
@@ -401,6 +359,42 @@ export default function ClassesAndAcademicYearsPage() {
                 className="px-4 h-9 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100"
               >
                 Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dialog Konfirmasi Hapus Rombel */}
+      {deletingClass && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100 space-y-4">
+            <h3 className="text-base font-bold text-slate-800">
+              Hapus Rombel {deletingClass.name}?
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Apakah Anda yakin ingin menghapus kelas/rombel{" "}
+              <strong className="text-slate-900">{deletingClass.name}</strong>{" "}
+              (Tingkat {deletingClass.gradeLevel})? Data siswa di Buku Induk
+              tetap aman dan hanya penempatan pada rombel ini yang akan dilepas.
+            </p>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingClass(null)}
+                className="px-4 h-9 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteClass(deletingClass.id);
+                  setDeletingClass(null);
+                }}
+                className="px-4 h-9 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+              >
+                Ya, Hapus Rombel
               </button>
             </div>
           </div>

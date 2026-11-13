@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -21,10 +21,51 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
+function getWibGreeting(): string {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Jakarta",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(new Date());
+    const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+    const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+    const totalMinutes = hour * 60 + minute;
+
+    // 00.01 - 10.30 WIB -> Selamat Pagi
+    if (totalMinutes >= 1 && totalMinutes <= 10 * 60 + 30) {
+      return "Selamat Pagi";
+    }
+    // 10.31 - 15.00 WIB -> Selamat Siang
+    if (totalMinutes >= 10 * 60 + 31 && totalMinutes <= 15 * 60) {
+      return "Selamat Siang";
+    }
+    // 15.01 - 18.00 WIB -> Selamat Sore
+    if (totalMinutes >= 15 * 60 + 1 && totalMinutes <= 18 * 60) {
+      return "Selamat Sore";
+    }
+    // 18.01 - 23.59 WIB -> Selamat Malam
+    return "Selamat Malam";
+  } catch {
+    return "Selamat Pagi";
+  }
+}
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const { currentUser, students, activeAcademicYear } = useSchool();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [greeting, setGreeting] = useState<string>("Selamat Pagi");
+
+  useEffect(() => {
+    setGreeting(getWibGreeting());
+    const timer = setInterval(() => {
+      setGreeting(getWibGreeting());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const activeStudentsCount = students.filter(
     (s) => s.status === "ACTIVE"
@@ -64,7 +105,7 @@ export function AppShell({ children }: AppShellProps) {
     .split(" ")[0];
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] text-slate-800">
+    <div className="min-h-screen bg-[#F5F7FA] print:bg-white text-slate-800">
       {/* OVERLAY MOBILE */}
       {mobileMenuOpen && (
         <div
@@ -163,41 +204,61 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* KONTEN UTAMA KANAN */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
-        {/* TOP HEADER */}
-        <header className="no-print h-20 px-6 lg:px-8 flex items-center justify-between gap-4 bg-[#F5F7FA]">
-          <div className="flex items-center gap-3">
+        {/* TOP HEADER: Hanya Ditampilkan di Halaman Dashboard ("/") */}
+        {pathname === "/" ? (
+          <header className="no-print h-20 px-6 lg:px-8 flex items-center justify-between gap-4 bg-[#F5F7FA]">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-xl bg-white border border-slate-200 text-slate-600"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+                    {greeting}, {firstName}! <span className="text-xl">👋</span>
+                  </h1>
+                  <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100/80 text-emerald-700 border border-emerald-200">
+                    TA {activeAcademicYear?.name}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 hidden sm:block">
+                  {currentUser.name} (@{currentUser.username}) • Staf Tata Usaha
+                </p>
+              </div>
+            </div>
+
+            {/* Kanan: Logo User Biasa (Statis, Tidak Bisa Diklik) */}
+            <div className="flex items-center">
+              <div className="h-10 w-10 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs select-none">
+                <UserIcon className="h-5 w-5" />
+              </div>
+            </div>
+          </header>
+        ) : (
+          /* Tombol Menu Mobile Saja pada Halaman Selain Dashboard */
+          <div className="no-print lg:hidden px-6 pt-4">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-white border border-slate-200 text-slate-600"
+              className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
-                  Selamat Pagi, {firstName}! <span className="text-xl">👋</span>
-                </h1>
-                <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100/80 text-emerald-700 border border-emerald-200">
-                  TA {activeAcademicYear?.name}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 hidden sm:block">
-                {currentUser.name} (@{currentUser.username}) • Staf Tata Usaha
-              </p>
-            </div>
           </div>
-
-          {/* Kanan: Logo User Biasa (Statis, Tidak Bisa Diklik) */}
-          <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs select-none">
-              <UserIcon className="h-5 w-5" />
-            </div>
-          </div>
-        </header>
+        )}
 
         {/* ISI HALAMAN */}
-        <main className="flex-1 px-6 lg:px-8 pb-10">{children}</main>
+        <main
+          className={cn(
+            "flex-1 px-6 lg:px-8 pb-10",
+            pathname === "/" ? "" : "pt-6 lg:pt-8"
+          )}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

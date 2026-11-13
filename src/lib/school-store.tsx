@@ -560,6 +560,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
 
   const deleteClass = (id: string) => {
     setClasses((prev) => prev.filter((c) => c.id !== id));
+    setClassHistory((prev) => prev.filter((h) => h.classId !== id));
   };
 
   const updatePersonnelStats = (stats: SchoolPersonnelStats) => {
