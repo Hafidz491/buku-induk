@@ -793,40 +793,41 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
-    const targetYearId = payload.academicYearId || activeAcademicYear.id;
-    if (payload.classId && payload.classId.trim() !== "") {
-      setClassHistory((prev) => {
-        const existingIndex = prev.findIndex(
-          (h) => h.studentId === id && h.academicYearId === targetYearId
+    if (payload.classId !== undefined) {
+      const targetYearId = payload.academicYearId || activeAcademicYear.id;
+      if (payload.classId.trim() !== "") {
+        setClassHistory((prev) => {
+          const existingIndex = prev.findIndex(
+            (h) => h.studentId === id && h.academicYearId === targetYearId
+          );
+          if (existingIndex >= 0) {
+            const copy = [...prev];
+            copy[existingIndex] = {
+              ...copy[existingIndex],
+              classId: payload.classId!,
+              statusInClass:
+                payload.statusInClass || copy[existingIndex].statusInClass,
+            };
+            return copy;
+          }
+          return [
+            ...prev,
+            {
+              id: `sch-${Date.now()}-${id}`,
+              studentId: id,
+              classId: payload.classId!,
+              academicYearId: targetYearId,
+              statusInClass: payload.statusInClass || "NEW",
+            },
+          ];
+        });
+      } else {
+        setClassHistory((prev) =>
+          prev.filter(
+            (h) => !(h.studentId === id && h.academicYearId === targetYearId)
+          )
         );
-        if (existingIndex >= 0) {
-          const copy = [...prev];
-          copy[existingIndex] = {
-            ...copy[existingIndex],
-            classId: payload.classId!,
-            statusInClass:
-              payload.statusInClass || copy[existingIndex].statusInClass,
-          };
-          return copy;
-        }
-        return [
-          ...prev,
-          {
-            id: `sch-${Date.now()}`,
-            studentId: id,
-            classId: payload.classId!,
-            academicYearId: targetYearId,
-            statusInClass: payload.statusInClass || "NEW",
-          },
-        ];
-      });
-    } else {
-      // Jika kelas dikosongkan, hapus penempatan pada tahun ajaran tersebut
-      setClassHistory((prev) =>
-        prev.filter(
-          (h) => !(h.studentId === id && h.academicYearId === targetYearId)
-        )
-      );
+      }
     }
   };
 
@@ -855,7 +856,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         {
           ...payload,
-          id: `sch-${Date.now()}`,
+          id: `sch-${Date.now()}-${payload.studentId}`,
         },
       ];
     });

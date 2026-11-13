@@ -10,6 +10,12 @@ import {
   Calendar,
   CheckCircle2,
   X,
+  RotateCcw,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight,
+  UserPlus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useSchool } from "@/lib/school-store";
@@ -20,6 +26,15 @@ const CURRICULUM_OPTIONS = [
   "Kurikulum SMA 2013 MIPA",
   "Kurikulum SMA 2013 IPS",
 ] as const;
+
+function formatBirthDateSlash(dateStr: string): string {
+  if (!dateStr) return "-";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
 
 export default function ClassesPage() {
   const {
@@ -33,6 +48,8 @@ export default function ClassesPage() {
     deleteClass,
     addAcademicYear,
     setActiveAcademicYear,
+    assignStudentToClass,
+    removeStudentClassHistory,
   } = useSchool();
 
   // Filter Tingkat Pendidikan
@@ -78,6 +95,21 @@ export default function ClassesPage() {
   const [newYearName, setNewYearName] = useState("");
   const [viewingClass, setViewingClass] = useState<SchoolClass | null>(null);
   const [deletingClass, setDeletingClass] = useState<SchoolClass | null>(null);
+
+  // State untuk Modal Edit Anggota Rombel (Kiri: Anggota Rombel, Kanan: Siswa Belum Masuk Rombel)
+  const [selectedLeftHistoryIds, setSelectedLeftHistoryIds] = useState<
+    string[]
+  >([]);
+  const [selectedRightStudentIds, setSelectedRightStudentIds] = useState<
+    string[]
+  >([]);
+  const [unassignedSearch, setUnassignedSearch] = useState("");
+
+  useEffect(() => {
+    setSelectedLeftHistoryIds([]);
+    setSelectedRightStudentIds([]);
+    setUnassignedSearch("");
+  }, [viewingClass, activeAcademicYear?.id]);
 
   const openAddModal = () => {
     setFormGradeLevel(10);
@@ -133,25 +165,116 @@ export default function ClassesPage() {
     setNewYearName("");
   };
 
-  // Data siswa yang menjadi Anggota Rombel pada Tahun Ajaran Aktif
-  const studentsInViewingClass = viewingClass
-    ? classHistory
-        .filter(
+  // Data siswa yang menjadi Anggota Rombel (KIRI) pada Tahun Ajaran Aktif
+  const studentsInViewingClass = useMemo(() => {
+    if (!viewingClass) return [];
+    return classHistory
+      .filter(
+        (h) =>
+          h.classId === viewingClass.id &&
+          h.academicYearId === activeAcademicYear?.id
+      )
+      .map((h) => {
+        const student = students.find((s) => s.id === h.studentId);
+        return student
+          ? {
+              ...student,
+              historyId: h.id,
+              statusInClass: h.statusInClass,
+            }
+          : null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }, [viewingClass, classHistory, activeAcademicYear?.id, students]);
+
+  // Data siswa aktif yang BELUM masuk rombel sama sekali pada Tahun Ajaran Aktif (KANAN)
+  const unassignedStudents = useMemo(() => {
+    const assignedStudentIdsInActiveYear = new Set(
+      classHistory
+        .filter((h) => h.academicYearId === activeAcademicYear?.id)
+        .map((h) => h.studentId)
+    );
+
+    const q = unassignedSearch.trim().toLowerCase();
+
+    return students
+      .filter(
+        (s) =>
+          s.status === "ACTIVE" && !assignedStudentIdsInActiveYear.has(s.id)
+      )
+      .filter((s) => {
+        if (!q) return true;
+        return (
+          s.fullName.toLowerCase().includes(q) ||
+          s.nisn.toLowerCase().includes(q) ||
+          s.nis.toLowerCase().includes(q)
+        );
+      })
+      .map((s) => {
+        // Cari kelas di periode/tahun ajaran sebelumnya jika ada
+        const prevHist = classHistory.find(
           (h) =>
-            h.classId === viewingClass.id &&
-            h.academicYearId === activeAcademicYear?.id
-        )
-        .map((h) => {
-          const student = students.find((s) => s.id === h.studentId);
-          return student
-            ? {
-                ...student,
-                statusInClass: h.statusInClass,
-              }
-            : null;
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null)
-    : [];
+            h.studentId === s.id && h.academicYearId !== activeAcademicYear?.id
+        );
+        const prevClass = prevHist
+          ? classes.find((c) => c.id === prevHist.classId)?.name || "-"
+          : "-";
+        return {
+          ...s,
+          previousClassName: prevClass,
+        };
+      })
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }, [
+    students,
+    classHistory,
+    activeAcademicYear?.id,
+    unassignedSearch,
+    classes,
+  ]);
+
+  const toggleLeftSelection = (historyId: string) => {
+    setSelectedLeftHistoryIds((prev) =>
+      prev.includes(historyId)
+        ? prev.filter((id) => id !== historyId)
+        : [...prev, historyId]
+    );
+  };
+
+  const toggleRightSelection = (studentId: string) => {
+    setSelectedRightStudentIds((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  const handleRemoveSelectedFromRombel = () => {
+    if (selectedLeftHistoryIds.length === 0) return;
+    selectedLeftHistoryIds.forEach((historyId) => {
+      removeStudentClassHistory(historyId);
+    });
+    setSelectedLeftHistoryIds([]);
+  };
+
+  const handleAddSelectedToRombel = () => {
+    if (
+      !viewingClass ||
+      !activeAcademicYear ||
+      selectedRightStudentIds.length === 0
+    )
+      return;
+    selectedRightStudentIds.forEach((studentId) => {
+      assignStudentToClass({
+        studentId,
+        classId: viewingClass.id,
+        academicYearId: activeAcademicYear.id,
+        statusInClass: viewingClass.gradeLevel === 10 ? "NEW" : "PROMOTED",
+      });
+    });
+    setSelectedRightStudentIds([]);
+  };
 
   return (
     <AppShell>
@@ -261,7 +384,6 @@ export default function ClassesPage() {
                       <tr
                         key={cls.id}
                         onClick={() => setSelectedClassId(cls.id)}
-                        onDoubleClick={() => setViewingClass(cls)}
                         className={`cursor-pointer transition-colors divide-x divide-slate-200/70 ${
                           isSelected
                             ? "bg-sky-50/90 text-slate-900 font-medium"
@@ -520,92 +642,334 @@ export default function ClassesPage() {
         </div>
       )}
 
-      {/* Modal Anggota Rombel (Hanya Menampilkan NISN, NAMA, dan JENIS KELAMIN) */}
+      {/* Modal Edit Anggota Rombel (Split 2 Kolom: Kiri Anggota Rombel, Kanan Siswa Belum Masuk Rombel) */}
       {viewingClass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-slate-100 overflow-hidden my-8">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-sky-500 text-white flex items-center justify-center">
-                  <Users className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-800">
-                    Anggota Rombel — Kelas {viewingClass.name}
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Kelas {viewingClass.gradeLevel} • {viewingClass.curriculum} • Wali Kelas:{" "}
-                    {viewingClass.homeroomTeacher || "-"} • Total{" "}
-                    {studentsInViewingClass.length} Siswa
-                  </p>
-                </div>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-2xs p-2 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-[1260px] rounded-lg bg-white shadow-2xl border border-slate-400 overflow-hidden my-4">
+            {/* Header Bar Bergaya Dapodik */}
+            <div className="px-4 py-2.5 bg-[#455a64] text-white flex items-center justify-between">
+              <h3 className="text-xs sm:text-sm font-semibold tracking-wide">
+                Edit Anggota Rombel {viewingClass.name} Angkatan{" "}
+                {activeAcademicYear?.name}
+              </h3>
               <button
                 type="button"
                 onClick={() => setViewingClass(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+                className="p-1 rounded-sm text-white/80 hover:text-white hover:bg-white/10 transition"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
-              {studentsInViewingClass.length > 0 ? (
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-slate-100/80 text-slate-700 border-b border-slate-200">
-                        <th className="py-2.5 px-4 font-bold w-12">No</th>
-                        <th className="py-2.5 px-4 font-bold">NISN</th>
-                        <th className="py-2.5 px-4 font-bold">Nama</th>
-                        <th className="py-2.5 px-4 font-bold">Jenis Kelamin</th>
+            {/* Body 2 Kolom: Kiri (Anggota Rombel) & Kanan (Siswa Belum Masuk Rombel) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-300">
+              {/* ================= KOLOM KIRI: DATA ANGGOTA ROMBEL ================= */}
+              <div className="flex flex-col bg-white">
+                {/* Toolbar Kiri */}
+                <div className="p-2.5 border-b border-slate-200 flex items-center justify-between gap-2 bg-white">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleRemoveSelectedFromRombel}
+                      disabled={selectedLeftHistoryIds.length === 0}
+                      className="h-8 px-3 rounded-sm bg-[#e74c3c] hover:bg-[#c0392b] disabled:opacity-50 text-white text-xs font-medium inline-flex items-center gap-1.5 shadow-2xs transition"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>
+                        Keluarkan dari Rombel
+                        {selectedLeftHistoryIds.length > 0
+                          ? ` (${selectedLeftHistoryIds.length})`
+                          : ""}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabel Kiri (Anggota Rombel) */}
+                <div className="h-[420px] overflow-auto">
+                  <table className="w-full text-left border-collapse text-[11px]">
+                    <thead className="sticky top-0 z-10 bg-slate-50 text-slate-700 border-b border-slate-300">
+                      <tr className="divide-x divide-slate-200">
+                        <th className="py-2 px-2.5 w-8 text-center">
+                          <input
+                            type="checkbox"
+                            checked={
+                              studentsInViewingClass.length > 0 &&
+                              selectedLeftHistoryIds.length ===
+                                studentsInViewingClass.length
+                            }
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedLeftHistoryIds(
+                                  studentsInViewingClass.map((s) => s.historyId)
+                                );
+                              } else {
+                                setSelectedLeftHistoryIds([]);
+                              }
+                            }}
+                            className="rounded border-slate-300"
+                          />
+                        </th>
+                        <th className="py-2 px-3 font-semibold">
+                          Peserta Didik ↑
+                        </th>
+                        <th className="py-2 px-3 font-semibold w-28">NISN</th>
+                        <th className="py-2 px-3 font-semibold w-24">NIS</th>
+                        <th className="py-2 px-2.5 font-semibold w-12 text-center">
+                          JK
+                        </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {studentsInViewingClass.map((std, index) => (
-                        <tr key={std.id} className="hover:bg-slate-50/80">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500">
-                            {index + 1}
-                          </td>
-                          <td className="py-2.5 px-4 font-mono font-bold text-slate-800">
-                            {std.nisn}
-                          </td>
-                          <td className="py-2.5 px-4 font-bold text-slate-800">
-                            {std.fullName}
-                          </td>
-                          <td className="py-2.5 px-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                                std.gender === "M"
-                                  ? "bg-sky-100 text-sky-700"
-                                  : "bg-pink-100 text-pink-700"
+                    <tbody className="divide-y divide-slate-200">
+                      {studentsInViewingClass.length > 0 ? (
+                        studentsInViewingClass.map((std, idx) => {
+                          const isChecked = selectedLeftHistoryIds.includes(
+                            std.historyId
+                          );
+                          return (
+                            <tr
+                              key={std.id}
+                              onClick={() => toggleLeftSelection(std.historyId)}
+                              className={`cursor-pointer divide-x divide-slate-200/70 transition-colors ${
+                                isChecked
+                                  ? "bg-rose-50/90 text-slate-900 font-medium"
+                                  : idx % 2 === 1
+                                  ? "bg-slate-50/70 hover:bg-slate-100/80 text-slate-700"
+                                  : "bg-white hover:bg-slate-100/80 text-slate-700"
                               }`}
                             >
-                              {std.gender === "M" ? "Laki-Laki" : "Perempuan"}
-                            </span>
+                              <td
+                                className="py-1.5 px-2.5 text-center"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() =>
+                                    toggleLeftSelection(std.historyId)
+                                  }
+                                  className="rounded border-slate-300"
+                                />
+                              </td>
+                              <td className="py-1.5 px-3 uppercase font-medium text-slate-800">
+                                {std.fullName}
+                              </td>
+                              <td className="py-1.5 px-3 font-mono text-slate-700">
+                                {std.nisn}
+                              </td>
+                              <td className="py-1.5 px-3 font-mono text-slate-700">
+                                {std.nis}
+                              </td>
+                              <td className="py-1.5 px-2.5 text-center font-semibold">
+                                {std.gender === "M" ? "L" : "P"}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="py-16 text-center text-xs text-slate-400"
+                          >
+                            Belum ada anggota rombel di kelas{" "}
+                            <strong>{viewingClass.name}</strong>. Pilih siswa
+                            dari tabel sebelah kanan untuk dimasukkan ke rombel
+                            ini.
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="py-12 text-center text-xs text-slate-400">
-                  Belum ada anggota rombel di kelas{" "}
-                  <strong>{viewingClass.name}</strong> pada Tahun Ajaran{" "}
-                  <strong>{activeAcademicYear?.name}</strong>.
-                </div>
-              )}
-            </div>
 
-            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
-              <button
-                type="button"
-                onClick={() => setViewingClass(null)}
-                className="px-4 h-9 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100"
-              >
-                Tutup
-              </button>
+                {/* Footer Kiri */}
+                <div className="px-3 py-2 bg-slate-50 border-t border-slate-300 flex items-center justify-between text-[11px] text-slate-600">
+                  <div className="flex items-center gap-1.5">
+                    <ChevronsLeft className="h-3.5 w-3.5 text-slate-400" />
+                    <ChevronLeft className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="mx-1">Page</span>
+                    <input
+                      type="text"
+                      readOnly
+                      value="1"
+                      className="w-8 h-5 text-center bg-white border border-slate-300 rounded-xs text-[11px]"
+                    />
+                    <span className="mx-1">of 1</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    <ChevronsRight className="h-3.5 w-3.5 text-slate-400" />
+                  </div>
+                  <div>
+                    Menampilkan baris{" "}
+                    {studentsInViewingClass.length > 0 ? 1 : 0} -{" "}
+                    {studentsInViewingClass.length} dari{" "}
+                    {studentsInViewingClass.length}
+                  </div>
+                </div>
+              </div>
+
+              {/* ================= KOLOM KANAN: SISWA BELUM MASUK ROMBEL ================= */}
+              <div className="flex flex-col bg-white">
+                {/* Toolbar Kanan */}
+                <div className="p-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 bg-white">
+                  <input
+                    type="text"
+                    placeholder="Cari Peserta Didik... (Nama / NISN)"
+                    value={unassignedSearch}
+                    onChange={(e) => setUnassignedSearch(e.target.value)}
+                    className="h-8 px-2.5 w-48 sm:w-56 rounded-sm bg-white border border-slate-300 text-xs text-slate-700 focus:outline-hidden focus:border-sky-500"
+                  />
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleAddSelectedToRombel}
+                      disabled={selectedRightStudentIds.length === 0}
+                      className="h-8 px-3 rounded-sm bg-[#2399e5] hover:bg-[#1d84c7] disabled:opacity-50 text-white text-xs font-medium inline-flex items-center gap-1.5 shadow-2xs transition"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                      <span>
+                        Masukkan ke Rombel
+                        {selectedRightStudentIds.length > 0
+                          ? ` (${selectedRightStudentIds.length})`
+                          : ""}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setUnassignedSearch("")}
+                      className="h-8 px-2.5 rounded-sm bg-[#67b8ef] hover:bg-[#4da8e8] text-white text-xs font-medium inline-flex items-center gap-1 shadow-2xs transition"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      <span>Tampilkan Semua</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabel Kanan (Siswa Belum Masuk Rombel Sama Sekali) */}
+                <div className="h-[420px] overflow-auto">
+                  <table className="w-full text-left border-collapse text-[11px]">
+                    <thead className="sticky top-0 z-10 bg-slate-50 text-slate-700 border-b border-slate-300">
+                      <tr className="divide-x divide-slate-200">
+                        <th className="py-2 px-2.5 w-8 text-center">
+                          <input
+                            type="checkbox"
+                            checked={
+                              unassignedStudents.length > 0 &&
+                              selectedRightStudentIds.length ===
+                                unassignedStudents.length
+                            }
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedRightStudentIds(
+                                  unassignedStudents.map((s) => s.id)
+                                );
+                              } else {
+                                setSelectedRightStudentIds([]);
+                              }
+                            }}
+                            className="rounded border-slate-300"
+                          />
+                        </th>
+                        <th className="py-2 px-3 font-semibold">Nama</th>
+                        <th className="py-2 px-3 font-semibold w-28">NISN</th>
+                        <th className="py-2 px-3 font-semibold w-24">
+                          Tgl Lahir
+                        </th>
+                        <th className="py-2 px-3 font-semibold">
+                          Kelas di Semester Kemarin
+                        </th>
+                        <th className="py-2 px-2.5 font-semibold w-12 text-center">
+                          JK
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {unassignedStudents.length > 0 ? (
+                        unassignedStudents.map((std, idx) => {
+                          const isChecked = selectedRightStudentIds.includes(
+                            std.id
+                          );
+                          return (
+                            <tr
+                              key={std.id}
+                              onClick={() => toggleRightSelection(std.id)}
+                              className={`cursor-pointer divide-x divide-slate-200/70 transition-colors ${
+                                isChecked
+                                  ? "bg-sky-50/90 text-slate-900 font-medium"
+                                  : idx % 2 === 1
+                                  ? "bg-slate-50/70 hover:bg-slate-100/80 text-slate-700"
+                                  : "bg-white hover:bg-slate-100/80 text-slate-700"
+                              }`}
+                            >
+                              <td
+                                className="py-1.5 px-2.5 text-center"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleRightSelection(std.id)}
+                                  className="rounded border-slate-300"
+                                />
+                              </td>
+                              <td className="py-1.5 px-3 uppercase font-medium text-slate-800">
+                                {std.fullName}
+                              </td>
+                              <td className="py-1.5 px-3 font-mono text-slate-700">
+                                {std.nisn}
+                              </td>
+                              <td className="py-1.5 px-3 font-mono text-slate-700">
+                                {formatBirthDateSlash(std.birthDate)}
+                              </td>
+                              <td className="py-1.5 px-3 text-slate-700">
+                                {std.previousClassName}
+                              </td>
+                              <td className="py-1.5 px-2.5 text-center font-semibold">
+                                {std.gender === "M" ? "L" : "P"}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="py-16 text-center text-xs text-slate-400"
+                          >
+                            Semua siswa aktif sudah ditempatkan ke dalam rombel
+                            pada Tahun Ajaran{" "}
+                            <strong>{activeAcademicYear?.name}</strong>.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Footer Kanan */}
+                <div className="px-3 py-2 bg-slate-50 border-t border-slate-300 flex items-center justify-between text-[11px] text-slate-600">
+                  <div className="flex items-center gap-1.5">
+                    <ChevronsLeft className="h-3.5 w-3.5 text-slate-400" />
+                    <ChevronLeft className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="mx-1">Page</span>
+                    <input
+                      type="text"
+                      readOnly
+                      value="1"
+                      className="w-8 h-5 text-center bg-white border border-slate-300 rounded-xs text-[11px]"
+                    />
+                    <span className="mx-1">of 1</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    <ChevronsRight className="h-3.5 w-3.5 text-slate-400" />
+                  </div>
+                  <div>
+                    Displaying data {unassignedStudents.length > 0 ? 1 : 0} -{" "}
+                    {unassignedStudents.length} of {unassignedStudents.length}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

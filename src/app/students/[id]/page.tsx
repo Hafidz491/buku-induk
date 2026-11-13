@@ -9,9 +9,6 @@ import {
   Printer,
   MapPin,
   Users,
-  GraduationCap,
-  Plus,
-  Trash2,
   History,
   UserCheck,
 } from "lucide-react";
@@ -28,27 +25,13 @@ export default function StudentDetailPage() {
     students,
     classes,
     academicYears,
-    activeAcademicYear,
     classHistory,
-    assignStudentToClass,
-    removeStudentClassHistory,
   } = useSchool();
 
   const student = students.find((s) => s.id === params.id);
 
   // State Modal Edit Identitas Siswa
   const [editModalOpen, setEditModalOpen] = useState(false);
-
-  // State Form Tambah / Update Riwayat Kelas (Kenaikan Kelas)
-  const [selectedYearId, setSelectedYearId] = useState<string>(
-    activeAcademicYear?.id || academicYears[0]?.id || ""
-  );
-  const [selectedClassId, setSelectedClassId] = useState<string>(
-    classes[0]?.id || ""
-  );
-  const [selectedStatusInClass, setSelectedStatusInClass] = useState<
-    "NEW" | "PROMOTED" | "RETAINED"
-  >("PROMOTED");
 
   if (!student) {
     return (
@@ -87,17 +70,6 @@ export default function StudentDetailPage() {
     .sort((a, b) => a.academicYearName.localeCompare(b.academicYearName));
 
   const currentActiveHistory = studentHistories.find((h) => h.isYearActive);
-
-  const handleAddOrUpdateHistory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedYearId || !selectedClassId) return;
-    assignStudentToClass({
-      studentId: student.id,
-      academicYearId: selectedYearId,
-      classId: selectedClassId,
-      statusInClass: selectedStatusInClass,
-    });
-  };
 
   const renderStatusBadge = (status: typeof student.status) => {
     switch (status) {
@@ -433,82 +405,6 @@ export default function StudentDetailPage() {
                 </div>
               </div>
 
-              {/* Form Tambah / Update Riwayat Kelas Siswa Ini (Disembunyikan saat Print) */}
-              <form
-                onSubmit={handleAddOrUpdateHistory}
-                className="no-print rounded-xl bg-slate-50 p-4 border border-slate-200/70 space-y-3"
-              >
-                <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <GraduationCap className="h-4 w-4 text-emerald-500" />
-                  <span>Catat Penempatan / Kenaikan Kelas</span>
-                </p>
-
-                <div className="grid grid-cols-1 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Tahun Ajaran
-                    </label>
-                    <select
-                      value={selectedYearId}
-                      onChange={(e) => setSelectedYearId(e.target.value)}
-                      className="w-full h-9 px-3 rounded-lg bg-white border border-slate-200 text-xs"
-                    >
-                      {academicYears.map((ay) => (
-                        <option key={ay.id} value={ay.id}>
-                          {ay.name} {ay.isActive ? "(Aktif)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                        Kelas / Rombel
-                      </label>
-                      <select
-                        value={selectedClassId}
-                        onChange={(e) => setSelectedClassId(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg bg-white border border-slate-200 text-xs"
-                      >
-                        {classes.map((cls) => (
-                          <option key={cls.id} value={cls.id}>
-                            {cls.name} (Tingkat {cls.gradeLevel})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                        Status di Kelas
-                      </label>
-                      <select
-                        value={selectedStatusInClass}
-                        onChange={(e) =>
-                          setSelectedStatusInClass(
-                            e.target.value as "NEW" | "PROMOTED" | "RETAINED"
-                          )
-                        }
-                        className="w-full h-9 px-3 rounded-lg bg-white border border-slate-200 text-xs"
-                      >
-                        <option value="NEW">Siswa Baru</option>
-                        <option value="PROMOTED">Naik Kelas</option>
-                        <option value="RETAINED">Tinggal Kelas</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full h-9 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 transition"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Simpan Riwayat Kelas</span>
-                </button>
-              </form>
-
               {/* Daftar Riwayat Kelas Siswa */}
               {studentHistories.length > 0 ? (
                 <div className="space-y-3">
@@ -545,21 +441,12 @@ export default function StudentDetailPage() {
                           </div>
                         </div>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => removeStudentClassHistory(hist.id)}
-                        title="Hapus Riwayat Kelas Ini"
-                        className="no-print p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="py-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">
-                  Siswa ini belum memiliki riwayat penempatan kelas (`student_class_history`).
+                  Siswa ini belum ditempatkan di rombel manapun. Penempatan rombel dilakukan melalui menu <strong>Kelas & Rombel → Anggota Rombel</strong>.
                 </div>
               )}
             </div>

@@ -18,10 +18,6 @@ export function StudentFormModal({
 }: StudentFormModalProps) {
   const {
     students,
-    classes,
-    academicYears,
-    activeAcademicYear,
-    classHistory,
     addStudent,
     updateStudent,
   } = useSchool();
@@ -52,13 +48,6 @@ export function StudentFormModal({
     "ACTIVE" | "GRADUATED" | "DROPPED_OUT" | "TRANSFERRED"
   >("ACTIVE");
 
-  const [academicYearId, setAcademicYearId] = useState<string>(
-    activeAcademicYear?.id || ""
-  );
-  const [classId, setClassId] = useState<string>("");
-  const [statusInClass, setStatusInClass] = useState<
-    "NEW" | "PROMOTED" | "RETAINED"
-  >("NEW");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,15 +71,6 @@ export function StudentFormModal({
       setMotherPhone(editingStudent.motherPhone);
       setEntryYear(editingStudent.entryYear);
       setStatus(editingStudent.status);
-
-      const activeHist = classHistory.find(
-        (h) =>
-          h.studentId === editingStudent.id &&
-          h.academicYearId === activeAcademicYear?.id
-      );
-      setAcademicYearId(activeAcademicYear?.id || "");
-      setClassId(activeHist?.classId || "");
-      setStatusInClass(activeHist?.statusInClass || "PROMOTED");
     } else {
       setNisn("");
       setNis("");
@@ -110,11 +90,8 @@ export function StudentFormModal({
       setMotherPhone("");
       setEntryYear(2025);
       setStatus("ACTIVE");
-      setAcademicYearId(activeAcademicYear?.id || "");
-      setClassId("");
-      setStatusInClass("NEW");
     }
-  }, [editingStudent, open, activeAcademicYear, classes, classHistory]);
+  }, [editingStudent, open]);
 
   if (!open) return null;
 
@@ -165,9 +142,6 @@ export function StudentFormModal({
       motherPhone,
       entryYear: Number(entryYear),
       status,
-      classId: classId || undefined,
-      academicYearId: academicYearId || activeAcademicYear?.id,
-      statusInClass,
     };
 
     if (editingStudent) {
@@ -528,67 +502,6 @@ export function StudentFormModal({
                 <option value="TRANSFERRED">PINDAH / MUTASI</option>
                 <option value="DROPPED_OUT">KELUAR / DO</option>
               </select>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-emerald-50/50 border border-emerald-100 p-4 space-y-3">
-            <p className="text-xs font-bold text-emerald-900">
-              4. Penempatan Kelas / Rombel (`student_class_history`)
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                  Tahun Ajaran
-                </label>
-                <select
-                  value={academicYearId}
-                  onChange={(e) => setAcademicYearId(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white"
-                >
-                  {academicYears.map((ay) => (
-                    <option key={ay.id} value={ay.id}>
-                      {ay.name} {ay.isActive ? "(Aktif)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                  Pilih Kelas / Rombel (Opsional)
-                </label>
-                <select
-                  value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white"
-                >
-                  <option value="">-- Kosong --</option>
-                  {classes.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name} (Tingkat {cls.gradeLevel})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                  Status di Kelas
-                </label>
-                <select
-                  value={statusInClass}
-                  onChange={(e) =>
-                    setStatusInClass(
-                      e.target.value as "NEW" | "PROMOTED" | "RETAINED"
-                    )
-                  }
-                  className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white"
-                >
-                  <option value="NEW">Siswa Baru</option>
-                  <option value="PROMOTED">Naik Kelas</option>
-                  <option value="RETAINED">Tinggal Kelas</option>
-                </select>
-              </div>
             </div>
           </div>
 
