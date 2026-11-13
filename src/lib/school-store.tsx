@@ -49,13 +49,55 @@ const INITIAL_ACADEMIC_YEARS: AcademicYear[] = [
 ];
 
 const INITIAL_CLASSES: SchoolClass[] = [
-  { id: "cls-x-ipa-1", name: "X IPA 1", gradeLevel: 10 },
-  { id: "cls-x-ipa-2", name: "X IPA 2", gradeLevel: 10 },
-  { id: "cls-x-ips-1", name: "X IPS 1", gradeLevel: 10 },
-  { id: "cls-xi-ipa-1", name: "XI IPA 1", gradeLevel: 11 },
-  { id: "cls-xi-ips-1", name: "XI IPS 1", gradeLevel: 11 },
-  { id: "cls-xii-ipa-1", name: "XII IPA 1", gradeLevel: 12 },
-  { id: "cls-xii-ips-1", name: "XII IPS 1", gradeLevel: 12 },
+  {
+    id: "cls-x-ipa-1",
+    name: "X IPA 1",
+    gradeLevel: 10,
+    curriculum: "Kurikulum SMA Merdeka",
+    homeroomTeacher: "Dra. Hj. Siti Aminah, M.Pd.",
+  },
+  {
+    id: "cls-x-ipa-2",
+    name: "X IPA 2",
+    gradeLevel: 10,
+    curriculum: "Kurikulum SMA Merdeka",
+    homeroomTeacher: "Rizky Pratama, S.Pd.",
+  },
+  {
+    id: "cls-x-ips-1",
+    name: "X IPS 1",
+    gradeLevel: 10,
+    curriculum: "Kurikulum SMA Merdeka",
+    homeroomTeacher: "Ahmad Fauzi, S.Pd.",
+  },
+  {
+    id: "cls-xi-ipa-1",
+    name: "XI IPA 1",
+    gradeLevel: 11,
+    curriculum: "Kurikulum SMA 2013 MIPA",
+    homeroomTeacher: "Bambang Sudibyo, S.Si.",
+  },
+  {
+    id: "cls-xi-ips-1",
+    name: "XI IPS 1",
+    gradeLevel: 11,
+    curriculum: "Kurikulum SMA 2013 IPS",
+    homeroomTeacher: "Ratna Dewi, S.Pd.",
+  },
+  {
+    id: "cls-xii-ipa-1",
+    name: "XII IPA 1",
+    gradeLevel: 12,
+    curriculum: "Kurikulum SMA 2013 MIPA",
+    homeroomTeacher: "Drs. Hendra Gunawan",
+  },
+  {
+    id: "cls-xii-ips-1",
+    name: "XII IPS 1",
+    gradeLevel: 12,
+    curriculum: "Kurikulum SMA 2013 IPS",
+    homeroomTeacher: "Lestari Handayani, S.E.",
+  },
 ];
 
 const INITIAL_STUDENTS: Student[] = [
@@ -423,6 +465,7 @@ interface SchoolContextValue {
   addAcademicYear: (payload: Omit<AcademicYear, "id">) => void;
   setActiveAcademicYear: (id: string) => void;
   addClass: (payload: Omit<SchoolClass, "id">) => void;
+  updateClass: (id: string, payload: Omit<SchoolClass, "id">) => void;
   deleteClass: (id: string) => void;
   addStudent: (payload: StudentFormInput) => Student;
   bulkImportStudents: (
@@ -469,7 +512,22 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           });
         }
         if (parsed.academicYears) setAcademicYears(parsed.academicYears);
-        if (parsed.classes) setClasses(parsed.classes);
+        if (parsed.classes) {
+          setClasses(
+            parsed.classes.map((c: Partial<SchoolClass> & { id: string; name: string; gradeLevel: number }) => {
+              const fallback = INITIAL_CLASSES.find((ic) => ic.id === c.id);
+              return {
+                ...c,
+                curriculum:
+                  c.curriculum ||
+                  fallback?.curriculum ||
+                  "Kurikulum SMA Merdeka",
+                homeroomTeacher:
+                  c.homeroomTeacher || fallback?.homeroomTeacher || "-",
+              };
+            })
+          );
+        }
         if (parsed.students) {
           setStudents(
             parsed.students.map((s: Student) => ({
@@ -556,6 +614,12 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
   const addClass = (payload: Omit<SchoolClass, "id">) => {
     const newId = `cls-${Date.now()}`;
     setClasses((prev) => [...prev, { ...payload, id: newId }]);
+  };
+
+  const updateClass = (id: string, payload: Omit<SchoolClass, "id">) => {
+    setClasses((prev) =>
+      prev.map((c) => (c.id === id ? { ...payload, id } : c))
+    );
   };
 
   const deleteClass = (id: string) => {
@@ -816,6 +880,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         addAcademicYear,
         setActiveAcademicYear,
         addClass,
+        updateClass,
         deleteClass,
         addStudent,
         bulkImportStudents,

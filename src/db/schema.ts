@@ -58,12 +58,18 @@ export const academicYears = pgTable("academic_years", {
 });
 
 // ==========================================
-// 3. TABEL CLASSES (Kelas)
+// 3. TABEL CLASSES (Kelas / Rombel)
 // ==========================================
 export const classes = pgTable("classes", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
   gradeLevel: integer("grade_level").notNull(),
+  curriculum: varchar("curriculum", { length: 100 })
+    .default("Kurikulum SMA Merdeka")
+    .notNull(),
+  homeroomTeacher: varchar("homeroom_teacher", { length: 150 })
+    .default("")
+    .notNull(),
 });
 
 // ==========================================

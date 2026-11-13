@@ -40,8 +40,8 @@ function PrintAttendanceContent() {
   const [selectedMonth, setSelectedMonth] = useState<number>(10); // November
   const [selectedYear, setSelectedYear] = useState<number>(2025);
 
-  // Nama Wali Kelas / Guru Pengampu (Opsional)
-  const [homeroomTeacher, setHomeroomTeacher] = useState<string>("");
+  // Opsi Tampilkan Nama Wali Kelas dari Detail Rombel
+  const [showHomeroomTeacher, setShowHomeroomTeacher] = useState<"SHOW" | "HIDE">("SHOW");
 
   useEffect(() => {
     if (queryClassId && classes.some((c) => c.id === queryClassId)) {
@@ -196,18 +196,21 @@ function PrintAttendanceContent() {
               />
             </div>
 
-            {/* Nama Wali Kelas / Guru (Opsional) */}
+            {/* Tampilkan Nama Wali Kelas atau Tidak */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                Wali Kelas / Guru (Opsional)
+                Tampilkan Nama Wali Kelas
               </label>
-              <input
-                type="text"
-                value={homeroomTeacher}
-                onChange={(e) => setHomeroomTeacher(e.target.value)}
-                placeholder="Nama Wali Kelas / Guru"
-                className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800"
-              />
+              <select
+                value={showHomeroomTeacher}
+                onChange={(e) =>
+                  setShowHomeroomTeacher(e.target.value as "SHOW" | "HIDE")
+                }
+                className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800"
+              >
+                <option value="SHOW">Tampilkan</option>
+                <option value="HIDE">Tidak Ditampilkan</option>
+              </select>
             </div>
           </div>
         </div>
@@ -363,8 +366,10 @@ function PrintAttendanceContent() {
             </p>
             <div className="h-14" />
             <p className="font-bold underline">
-              {homeroomTeacher.trim()
-                ? homeroomTeacher
+              {showHomeroomTeacher === "SHOW" &&
+              selectedClass?.homeroomTeacher &&
+              selectedClass.homeroomTeacher !== "-"
+                ? selectedClass.homeroomTeacher
                 : ".................................................."}
             </p>
           </div>

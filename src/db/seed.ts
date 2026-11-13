@@ -53,11 +53,36 @@ async function main() {
   const insertedClasses = await db
     .insert(schema.classes)
     .values([
-      { name: "X IPA 1", gradeLevel: 10 },
-      { name: "X IPS 1", gradeLevel: 10 },
-      { name: "XI IPA 1", gradeLevel: 11 },
-      { name: "XI IPS 1", gradeLevel: 11 },
-      { name: "XII IPA 1", gradeLevel: 12 },
+      {
+        name: "X IPA 1",
+        gradeLevel: 10,
+        curriculum: "Kurikulum SMA Merdeka",
+        homeroomTeacher: "Dra. Hj. Siti Aminah, M.Pd.",
+      },
+      {
+        name: "X IPS 1",
+        gradeLevel: 10,
+        curriculum: "Kurikulum SMA Merdeka",
+        homeroomTeacher: "Ahmad Fauzi, S.Pd.",
+      },
+      {
+        name: "XI IPA 1",
+        gradeLevel: 11,
+        curriculum: "Kurikulum SMA 2013 MIPA",
+        homeroomTeacher: "Bambang Sudibyo, S.Si.",
+      },
+      {
+        name: "XI IPS 1",
+        gradeLevel: 11,
+        curriculum: "Kurikulum SMA 2013 IPS",
+        homeroomTeacher: "Ratna Dewi, S.Pd.",
+      },
+      {
+        name: "XII IPA 1",
+        gradeLevel: 12,
+        curriculum: "Kurikulum SMA 2013 MIPA",
+        homeroomTeacher: "Drs. Hendra Gunawan",
+      },
     ])
     .onConflictDoNothing()
     .returning();

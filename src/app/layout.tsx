@@ -6,9 +6,9 @@ import { SchoolProvider } from "@/lib/school-store";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Buku Induk Siswa",
+  title: "Buku Induk SMA Bina Insan Mulia",
   description:
-    "Sistem Informasi Manajemen Buku Induk Siswa & Cetak Presensi Fisik untuk Staf Tata Usaha (TU) Sekolah",
+    "Sistem Informasi Manajemen Buku Induk SMA Bina Insan Mulia untuk Staf Tata Usaha (TU) Sekolah",
 };
 
 export default function RootLayout({
