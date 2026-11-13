@@ -31,27 +31,58 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground antialiased;
   }
 }
 
 /* =========================================================
-   PRINT CSS KHUSUS ADMINISTRASI SEKOLAH (LEMBAR ABSENSI & BUKU INDUK)
+   STYLING TABEL ABSENSI DI LAYAR MAUPUN SAAT DICETAK (GARIS PEMISAH TEGAS)
+   ========================================================= */
+table.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5px solid #1e293b;
+}
+
+table.print-table th,
+table.print-table td {
+  border: 1px solid #334155;
+  padding: 4px 3px;
+  color: #0f172a;
+}
+
+table.print-table thead th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* =========================================================
+   PRINT CSS KHUSUS ADMINISTRASI SEKOLAH (POTRET A4)
    ========================================================= */
 @media print {
   @page {
-    size: A4 landscape;
-    margin: 10mm 12mm;
+    size: A4 portrait;
+    margin: 8mm 10mm;
   }
 
+  html,
   body {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
     font-family: "Times New Roman", Times, serif;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Pastikan seluruh wrapper utama berwarna putih bersih saat dicetak */
+  body > div,
+  main,
+  .print-container {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
   }
 
   /* Sembunyikan elemen navigasi, sidebar, filter, dan tombol saat dicetak */
@@ -59,7 +90,17 @@
     display: none !important;
   }
 
-  /* Pastikan container cetak memenuhi lebar kertas */
+  /* Hilangkan padding kiri sidebar pada saat mode cetak */
+  .lg\:pl-64 {
+    padding-left: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Pastikan container cetak memenuhi lebar kertas A4 Potret */
   .print-container {
     width: 100% !important;
     max-width: none !important;
@@ -73,13 +114,14 @@
   table.print-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 10pt !important;
+    font-size: 8.5pt !important;
+    border: 1.5px solid #000000 !important;
   }
 
   table.print-table th,
   table.print-table td {
     border: 1px solid #000000 !important;
-    padding: 4px 6px !important;
+    padding: 3px 2px !important;
     color: #000000 !important;
   }
 
