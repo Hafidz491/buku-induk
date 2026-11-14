@@ -107,6 +107,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "252610001",
     fullName: "Aditya Pratama Putra",
     gender: "M",
+    studentPhone: "",
     birthPlace: "Bandung",
     birthDate: "2009-04-12",
     streetAddress: "Jl. Merdeka No. 12",
@@ -130,6 +131,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "252610002",
     fullName: "Aisyah Putri Maharani",
     gender: "F",
+    studentPhone: "",
     birthPlace: "Jakarta",
     birthDate: "2009-08-23",
     streetAddress: "Jl. Diponegoro No. 88",
@@ -153,6 +155,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "252610003",
     fullName: "Bagas Satrio Wibowo",
     gender: "M",
+    studentPhone: "",
     birthPlace: "Surabaya",
     birthDate: "2010-01-15",
     streetAddress: "Komp. Griya Asri Blok C4 No. 7",
@@ -176,6 +179,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "252610004",
     fullName: "Citra Kirana Dewi",
     gender: "F",
+    studentPhone: "",
     birthPlace: "Yogyakarta",
     birthDate: "2009-11-04",
     streetAddress: "Jl. Cihampelas No. 142",
@@ -199,6 +203,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "242510005",
     fullName: "Dimas Anggara Saputra",
     gender: "M",
+    studentPhone: "",
     birthPlace: "Semarang",
     birthDate: "2008-05-19",
     streetAddress: "Jl. Buah Batu No. 54",
@@ -222,6 +227,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "242510006",
     fullName: "Fadhilah Nur Azizah",
     gender: "F",
+    studentPhone: "",
     birthPlace: "Bandung",
     birthDate: "2008-09-28",
     streetAddress: "Jl. Dago Asri II No. 19",
@@ -245,6 +251,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "232410007",
     fullName: "Gilang Ramadhan Hakim",
     gender: "M",
+    studentPhone: "",
     birthPlace: "Bogor",
     birthDate: "2007-10-08",
     streetAddress: "Jl. Setiabudi No. 210",
@@ -268,6 +275,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "232410008",
     fullName: "Hana Sofia Nabila",
     gender: "F",
+    studentPhone: "",
     birthPlace: "Garut",
     birthDate: "2007-12-02",
     streetAddress: "Jl. Pasirkaliki No. 73",
@@ -291,6 +299,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "222310009",
     fullName: "Irfan Maulana Hakim",
     gender: "M",
+    studentPhone: "081322446688",
     birthPlace: "Cimahi",
     birthDate: "2006-03-21",
     streetAddress: "Jl. Gatot Subroto No. 31",
@@ -314,6 +323,7 @@ const INITIAL_STUDENTS: Student[] = [
     nis: "242510010",
     fullName: "Keysha Aurelia Putri",
     gender: "F",
+    studentPhone: "",
     birthPlace: "Bekasi",
     birthDate: "2008-07-14",
     streetAddress: "Jl. Soekarno Hatta No. 402",
@@ -445,8 +455,9 @@ interface UpdateProfilePayload {
 
 export type StudentFormInput = Omit<
   Student,
-  "id" | "createdAt" | "updatedAt"
+  "id" | "createdAt" | "updatedAt" | "studentPhone"
 > & {
+  studentPhone?: string;
   classId?: string;
   academicYearId?: string;
   statusInClass?: "NEW" | "PROMOTED" | "RETAINED";
@@ -532,6 +543,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           setStudents(
             parsed.students.map((s: Student) => ({
               ...s,
+              studentPhone: s.studentPhone || "",
               createdAt: new Date(s.createdAt),
               updatedAt: new Date(s.updatedAt),
             }))
@@ -640,6 +652,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       nis: payload.nis.trim(),
       fullName: payload.fullName.trim(),
       gender: payload.gender,
+      studentPhone: (payload.studentPhone || "").trim(),
       birthPlace: payload.birthPlace.trim(),
       birthDate: payload.birthDate,
       streetAddress: payload.streetAddress.trim(),
@@ -714,6 +727,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         nis: cleanNis,
         fullName: cleanName,
         gender: row.gender,
+        studentPhone: (row.studentPhone || "").trim(),
         birthPlace: row.birthPlace.trim() || "-",
         birthDate: row.birthDate || "2009-01-01",
         streetAddress: row.streetAddress.trim() || "-",
@@ -765,32 +779,44 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
   const updateStudent = (id: string, payload: StudentFormInput) => {
     const now = new Date();
     setStudents((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              nisn: payload.nisn.trim(),
-              nis: payload.nis.trim(),
-              fullName: payload.fullName.trim(),
-              gender: payload.gender,
-              birthPlace: payload.birthPlace.trim(),
-              birthDate: payload.birthDate,
-              streetAddress: payload.streetAddress.trim(),
-              rtRw: payload.rtRw.trim(),
-              village: payload.village.trim(),
-              district: payload.district.trim(),
-              city: payload.city.trim(),
-              province: payload.province.trim(),
-              fatherName: payload.fatherName.trim(),
-              fatherPhone: (payload.fatherPhone || "").trim(),
-              motherName: payload.motherName.trim(),
-              motherPhone: (payload.motherPhone || "").trim(),
-              entryYear: Number(payload.entryYear),
-              status: payload.status,
-              updatedAt: now,
-            }
-          : s
-      )
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        // Jika siswa sudah LULUS (GRADUATED), hanya kolom Nomor Telepon Siswa (studentPhone) yang dapat diubah
+        if (s.status === "GRADUATED") {
+          return {
+            ...s,
+            studentPhone: (payload.studentPhone ?? s.studentPhone ?? "").trim(),
+            updatedAt: now,
+          };
+        }
+        // Jika siswa sudah KELUAR / MUTASI (TRANSFERRED / DROPPED_OUT), seluruh data terkunci permanen
+        if (s.status !== "ACTIVE") {
+          return s;
+        }
+        return {
+          ...s,
+          nisn: payload.nisn.trim(),
+          nis: payload.nis.trim(),
+          fullName: payload.fullName.trim(),
+          gender: payload.gender,
+          studentPhone: (payload.studentPhone ?? s.studentPhone ?? "").trim(),
+          birthPlace: payload.birthPlace.trim(),
+          birthDate: payload.birthDate,
+          streetAddress: payload.streetAddress.trim(),
+          rtRw: payload.rtRw.trim(),
+          village: payload.village.trim(),
+          district: payload.district.trim(),
+          city: payload.city.trim(),
+          province: payload.province.trim(),
+          fatherName: payload.fatherName.trim(),
+          fatherPhone: (payload.fatherPhone || "").trim(),
+          motherName: payload.motherName.trim(),
+          motherPhone: (payload.motherPhone || "").trim(),
+          entryYear: Number(payload.entryYear),
+          status: payload.status,
+          updatedAt: now,
+        };
+      })
     );
 
     if (payload.classId !== undefined) {

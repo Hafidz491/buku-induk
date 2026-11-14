@@ -242,6 +242,16 @@ export default function StudentDetailPage() {
                     {student.gender === "M" ? "Laki-Laki (L)" : "Perempuan (P)"}
                   </dd>
                 </div>
+                {student.status === "GRADUATED" && (
+                  <div>
+                    <dt className="text-slate-400 font-medium">
+                      Nomor Telepon Siswa
+                    </dt>
+                    <dd className="font-bold text-slate-800 font-mono mt-0.5">
+                      {student.studentPhone ? student.studentPhone : "-"}
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-slate-400 font-medium">NISN</dt>
                   <dd className="font-bold text-slate-800 font-mono mt-0.5">

@@ -81,6 +81,7 @@ export const students = pgTable("students", {
   nis: varchar("nis", { length: 20 }).notNull().unique(),
   fullName: varchar("full_name", { length: 200 }).notNull(),
   gender: genderEnum("gender").notNull(),
+  studentPhone: varchar("student_phone", { length: 30 }).default("").notNull(),
   birthPlace: varchar("birth_place", { length: 100 }).notNull(),
   birthDate: date("birth_date", { mode: "string" }).notNull(),
   // Alamat Terstruktur (Jalan, RT/RW, Kelurahan, Kecamatan, Kab/Kota, Provinsi)

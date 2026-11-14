@@ -267,6 +267,21 @@ function StudentsBukuIndukContent() {
           </span>
         ),
       },
+      ...(category === "graduated"
+        ? ([
+            {
+              accessorKey: "studentPhone",
+              header: "No. Telepon",
+              cell: ({ row }) => (
+                <span className="text-xs font-mono font-semibold text-slate-700">
+                  {row.original.studentPhone
+                    ? row.original.studentPhone
+                    : "-"}
+                </span>
+              ),
+            },
+          ] as ColumnDef<EnrichedStudent>[])
+        : []),
       {
         accessorKey: "birthDate",
         header: "Tempat, Tgl Lahir",
@@ -351,7 +366,7 @@ function StudentsBukuIndukContent() {
         },
       },
     ],
-    []
+    [category]
   );
 
   const table = useReactTable({
