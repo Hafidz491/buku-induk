@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Home,
   Users,
@@ -13,6 +13,10 @@ import {
   Menu,
   X,
   User as UserIcon,
+  ChevronDown,
+  UserCheck,
+  GraduationCap,
+  UserX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSchool } from "@/lib/school-store";
@@ -53,11 +57,127 @@ function getWibGreeting(): string {
   }
 }
 
+function BukuIndukSubMenu({
+  onNavigate,
+}: {
+  onNavigate: () => void;
+}) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { students } = useSchool();
+
+  const currentCategory = searchParams.get("category") || "active";
+  const isOnStudentsList = pathname === "/students";
+
+  const activeCount = students.filter((s) => s.status === "ACTIVE").length;
+  const graduatedCount = students.filter((s) => s.status === "GRADUATED").length;
+  const leftCount = students.filter(
+    (s) => s.status === "TRANSFERRED" || s.status === "DROPPED_OUT"
+  ).length;
+
+  const subItems = [
+    {
+      label: "Siswa Aktif",
+      href: "/students?category=active",
+      category: "active",
+      icon: UserCheck,
+      count: activeCount,
+      isDanger: false,
+    },
+    {
+      label: "Siswa Lulus",
+      href: "/students?category=graduated",
+      category: "graduated",
+      icon: GraduationCap,
+      count: graduatedCount,
+      isDanger: false,
+    },
+    {
+      label: "Siswa Keluar",
+      href: "/students?category=left",
+      category: "left",
+      icon: UserX,
+      count: leftCount,
+      isDanger: true,
+    },
+  ];
+
+  return (
+    <div className="mt-1 ml-4 pl-3 border-l-2 border-slate-100 space-y-1">
+      {subItems.map((sub) => {
+        const SubIcon = sub.icon;
+        const isSubActive =
+          isOnStudentsList && currentCategory === sub.category;
+
+        return (
+          <Link
+            key={sub.category}
+            href={sub.href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all",
+              isSubActive
+                ? sub.isDanger
+                  ? "bg-rose-50 text-rose-600 font-bold"
+                  : "bg-emerald-50/80 text-emerald-600 font-bold"
+                : sub.isDanger
+                ? "text-rose-500 hover:bg-rose-50/60 hover:text-rose-600"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <SubIcon
+                className={cn(
+                  "h-4 w-4",
+                  isSubActive
+                    ? sub.isDanger
+                      ? "text-rose-600"
+                      : "text-emerald-500"
+                    : sub.isDanger
+                    ? "text-rose-400"
+                    : "text-slate-400"
+                )}
+              />
+              <span>{sub.label}</span>
+            </div>
+
+            <span
+              className={cn(
+                "inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold",
+                isSubActive
+                  ? sub.isDanger
+                    ? "bg-rose-500 text-white"
+                    : "bg-emerald-500 text-white"
+                  : sub.isDanger
+                  ? "bg-rose-100 text-rose-600"
+                  : "bg-slate-100 text-slate-600"
+              )}
+            >
+              {sub.count}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const { currentUser, students, activeAcademicYear } = useSchool();
+  const { currentUser, activeAcademicYear } = useSchool();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [greeting, setGreeting] = useState<string>("Selamat Pagi");
+
+  const isBukuIndukSection = pathname.startsWith("/students");
+  const [bukuIndukOpen, setBukuIndukOpen] = useState<boolean>(
+    isBukuIndukSection
+  );
+
+  useEffect(() => {
+    if (isBukuIndukSection) {
+      setBukuIndukOpen(true);
+    }
+  }, [isBukuIndukSection]);
 
   useEffect(() => {
     setGreeting(getWibGreeting());
@@ -66,39 +186,6 @@ export function AppShell({ children }: AppShellProps) {
     }, 30000);
     return () => clearInterval(timer);
   }, []);
-
-  const activeStudentsCount = students.filter(
-    (s) => s.status === "ACTIVE"
-  ).length;
-
-  const navItems = [
-    {
-      label: "Dashboard",
-      href: "/",
-      icon: Home,
-    },
-    {
-      label: "Buku Induk",
-      href: "/students",
-      icon: Users,
-      badge: activeStudentsCount,
-    },
-    {
-      label: "Kelas & Rombel",
-      href: "/classes",
-      icon: BookOpen,
-    },
-    {
-      label: "Cetak Absensi",
-      href: "/print-attendance",
-      icon: Printer,
-    },
-    {
-      label: "Pengaturan TU",
-      href: "/settings",
-      icon: Settings,
-    },
-  ];
 
   const firstName = currentUser.name
     .replace(/^(Drs\.|H\.|Ir\.|S\.Pd\.)\s*/gi, "")
@@ -143,50 +230,157 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Menu Utama */}
           <nav className="mt-2 space-y-1.5 px-3">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+            {/* 1. Dashboard */}
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className={cn(
+                "relative group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                pathname === "/"
+                  ? "text-emerald-600 bg-emerald-50/70 font-semibold"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+              )}
+            >
+              {pathname === "/" && (
+                <span className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-500 rounded-r-full" />
+              )}
+              <div className="flex items-center gap-3.5">
+                <Home
                   className={cn(
-                    "relative group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                    isActive
-                      ? "text-emerald-600 bg-emerald-50/70 font-semibold"
-                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    "h-5 w-5 transition-colors",
+                    pathname === "/"
+                      ? "text-emerald-500"
+                      : "text-slate-400 group-hover:text-slate-600"
                   )}
-                >
-                  {/* Indikator Garis Hijau di Kiri */}
-                  {isActive && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-500 rounded-r-full" />
-                  )}
+                />
+                <span>Dashboard</span>
+              </div>
+            </Link>
 
-                  <div className="flex items-center gap-3.5">
-                    <Icon
-                      className={cn(
-                        "h-5 w-5 transition-colors",
-                        isActive
-                          ? "text-emerald-500"
-                          : "text-slate-400 group-hover:text-slate-600"
-                      )}
-                    />
-                    <span>{item.label}</span>
-                  </div>
-
-                  {typeof item.badge === "number" && (
-                    <span className="inline-flex items-center justify-center min-w-6 h-6 px-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs">
-                      {item.badge}
-                    </span>
+            {/* 2. Buku Induk (Dropdown: Siswa Aktif, Siswa Lulus, Siswa Keluar) */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setBukuIndukOpen((prev) => !prev)}
+                className={cn(
+                  "w-full relative group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  isBukuIndukSection
+                    ? "text-emerald-600 bg-emerald-50/70 font-semibold"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                )}
+              >
+                {isBukuIndukSection && (
+                  <span className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-500 rounded-r-full" />
+                )}
+                <div className="flex items-center gap-3.5">
+                  <Users
+                    className={cn(
+                      "h-5 w-5 transition-colors",
+                      isBukuIndukSection
+                        ? "text-emerald-500"
+                        : "text-slate-400 group-hover:text-slate-600"
+                    )}
+                  />
+                  <span>Buku Induk</span>
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 transition-transform duration-200",
+                    bukuIndukOpen ? "rotate-180" : "rotate-0",
+                    isBukuIndukSection ? "text-emerald-600" : "text-slate-400"
                   )}
-                </Link>
-              );
-            })}
+                />
+              </button>
+
+              {bukuIndukOpen && (
+                <Suspense fallback={null}>
+                  <BukuIndukSubMenu
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                </Suspense>
+              )}
+            </div>
+
+            {/* 3. Kelas & Rombel */}
+            <Link
+              href="/classes"
+              onClick={() => setMobileMenuOpen(false)}
+              className={cn(
+                "relative group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                pathname.startsWith("/classes")
+                  ? "text-emerald-600 bg-emerald-50/70 font-semibold"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+              )}
+            >
+              {pathname.startsWith("/classes") && (
+                <span className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-500 rounded-r-full" />
+              )}
+              <div className="flex items-center gap-3.5">
+                <BookOpen
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    pathname.startsWith("/classes")
+                      ? "text-emerald-500"
+                      : "text-slate-400 group-hover:text-slate-600"
+                  )}
+                />
+                <span>Kelas & Rombel</span>
+              </div>
+            </Link>
+
+            {/* 4. Cetak Absensi */}
+            <Link
+              href="/print-attendance"
+              onClick={() => setMobileMenuOpen(false)}
+              className={cn(
+                "relative group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                pathname.startsWith("/print-attendance")
+                  ? "text-emerald-600 bg-emerald-50/70 font-semibold"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+              )}
+            >
+              {pathname.startsWith("/print-attendance") && (
+                <span className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-500 rounded-r-full" />
+              )}
+              <div className="flex items-center gap-3.5">
+                <Printer
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    pathname.startsWith("/print-attendance")
+                      ? "text-emerald-500"
+                      : "text-slate-400 group-hover:text-slate-600"
+                  )}
+                />
+                <span>Cetak Absensi</span>
+              </div>
+            </Link>
+
+            {/* 5. Pengaturan TU */}
+            <Link
+              href="/settings"
+              onClick={() => setMobileMenuOpen(false)}
+              className={cn(
+                "relative group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                pathname.startsWith("/settings")
+                  ? "text-emerald-600 bg-emerald-50/70 font-semibold"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+              )}
+            >
+              {pathname.startsWith("/settings") && (
+                <span className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-500 rounded-r-full" />
+              )}
+              <div className="flex items-center gap-3.5">
+                <Settings
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    pathname.startsWith("/settings")
+                      ? "text-emerald-500"
+                      : "text-slate-400 group-hover:text-slate-600"
+                  )}
+                />
+                <span>Pengaturan TU</span>
+              </div>
+            </Link>
           </nav>
         </div>
 

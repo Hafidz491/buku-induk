@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   useReactTable,
   getCoreRowModel,
@@ -45,7 +46,13 @@ interface EnrichedStudent extends Student {
   currentClassId: string;
 }
 
-export default function StudentsBukuIndukPage() {
+function StudentsBukuIndukContent() {
+  const searchParams = useSearchParams();
+  const category = (searchParams.get("category") || "active") as
+    | "active"
+    | "graduated"
+    | "left";
+
   const {
     students,
     classes,
@@ -61,7 +68,12 @@ export default function StudentsBukuIndukPage() {
     activeAcademicYear?.id || "ALL"
   );
   const [selectedClassId, setSelectedClassId] = useState<string>("ALL");
-  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [selectedLeftSubStatus, setSelectedLeftSubStatus] =
+    useState<string>("ALL");
+
+  useEffect(() => {
+    setSelectedLeftSubStatus("ALL");
+  }, [category]);
 
   // State Modal Tambah / Edit, Import Excel, & Konfirmasi Hapus
   const [modalOpen, setModalOpen] = useState(false);
@@ -95,9 +107,21 @@ export default function StudentsBukuIndukPage() {
     });
   }, [students, classHistory, classes, selectedYearId, activeAcademicYear]);
 
-  // Filter instan berdasarkan Search, Kelas, Tahun Ajaran, dan Status
-  const filteredData = useMemo(() => {
+  // Siswa berdasarkan kategori sub-menu (Siswa Aktif / Siswa Lulus / Siswa Keluar)
+  const categoryStudents = useMemo(() => {
     return enrichedStudents.filter((item) => {
+      if (category === "active") return item.status === "ACTIVE";
+      if (category === "graduated") return item.status === "GRADUATED";
+      if (category === "left") {
+        return item.status === "TRANSFERRED" || item.status === "DROPPED_OUT";
+      }
+      return item.status === "ACTIVE";
+    });
+  }, [enrichedStudents, category]);
+
+  // Filter instan berdasarkan Search, Kelas, Tahun Ajaran, dan Sub-Status (khusus Siswa Keluar)
+  const filteredData = useMemo(() => {
+    return categoryStudents.filter((item) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchSearch =
@@ -126,18 +150,23 @@ export default function StudentsBukuIndukPage() {
         if (item.currentClassId !== selectedClassId) return false;
       }
 
-      if (selectedStatus !== "ALL" && item.status !== selectedStatus) {
+      if (
+        category === "left" &&
+        selectedLeftSubStatus !== "ALL" &&
+        item.status !== selectedLeftSubStatus
+      ) {
         return false;
       }
 
       return true;
     });
   }, [
-    enrichedStudents,
+    categoryStudents,
     searchQuery,
     selectedYearId,
     selectedClassId,
-    selectedStatus,
+    category,
+    selectedLeftSubStatus,
     classHistory,
   ]);
 
@@ -148,7 +177,7 @@ export default function StudentsBukuIndukPage() {
       case "GRADUATED":
         return <Badge variant="info">Lulus</Badge>;
       case "TRANSFERRED":
-        return <Badge variant="warning">Pindah</Badge>;
+        return <Badge variant="warning">Pindah / Mutasi</Badge>;
       case "DROPPED_OUT":
         return <Badge variant="destructive">Keluar / DO</Badge>;
       default:
@@ -228,10 +257,11 @@ export default function StudentsBukuIndukPage() {
         header: "L/P",
         cell: ({ row }) => (
           <span
-            className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold ${row.original.gender === "M"
+            className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold ${
+              row.original.gender === "M"
                 ? "bg-sky-100 text-sky-700"
                 : "bg-pink-100 text-pink-700"
-              }`}
+            }`}
           >
             {row.original.gender === "M" ? "L" : "P"}
           </span>
@@ -345,23 +375,33 @@ export default function StudentsBukuIndukPage() {
     setSearchQuery("");
     setSelectedYearId(activeAcademicYear?.id || "ALL");
     setSelectedClassId("ALL");
-    setSelectedStatus("ALL");
+    setSelectedLeftSubStatus("ALL");
   };
 
-  return (
-    <AppShell>
-      <div className="space-y-6">
-        {/* Header Halaman & Tombol Import Excel + Tambah Siswa */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">
-              Buku Induk Siswa
-            </h2>
-            <p className="text-xs text-slate-500">
-              Kelola data identitas permanen siswa, import massal dari Excel, pencarian instan, dan filter kelas.
-            </p>
-          </div>
+  const pageTitle =
+    category === "graduated"
+      ? "Buku Induk — Siswa Lulus"
+      : category === "left"
+      ? "Buku Induk — Siswa Keluar"
+      : "Buku Induk — Siswa Aktif";
 
+  const pageSubtitle =
+    category === "graduated"
+      ? "Daftar arsip buku induk siswa yang telah lulus / alumni."
+      : category === "left"
+      ? "Daftar arsip buku induk siswa yang pindah / mutasi maupun keluar (DO)."
+      : "Kelola data identitas permanen siswa aktif, import massal dari Excel, dan pencarian instan.";
+
+  return (
+    <div className="space-y-6">
+      {/* Header Halaman & Tombol Import Excel + Tambah Siswa */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">{pageTitle}</h2>
+          <p className="text-xs text-slate-500">{pageSubtitle}</p>
+        </div>
+
+        {category === "active" && (
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
@@ -384,172 +424,176 @@ export default function StudentsBukuIndukPage() {
               <span>Tambah Siswa Baru</span>
             </button>
           </div>
+        )}
+      </div>
+
+      {/* Bar Pencarian Instan & Filter Kelas / Tahun Ajaran */}
+      <div className="rounded-2xl bg-white p-5 shadow-xs border border-slate-100 space-y-4">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+          <Filter className="h-4 w-4 text-emerald-500" />
+          <span>Pencarian Instan & Filter Buku Induk</span>
         </div>
 
-        {/* Bar Pencarian Instan & Filter Kelas / Tahun Ajaran / Status */}
-        <div className="rounded-2xl bg-white p-5 shadow-xs border border-slate-100 space-y-4">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-            <Filter className="h-4 w-4 text-emerald-500" />
-            <span>Pencarian Instan & Filter Buku Induk</span>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          {/* Input Search Instan */}
+          <div
+            className={`${
+              category === "left" ? "md:col-span-5" : "md:col-span-6"
+            } relative`}
+          >
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari NISN, NIS, Nama Siswa, Ayah/Ibu, atau Alamat..."
+              className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-            {/* Input Search Instan */}
-            <div className="md:col-span-5 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari NISN, NIS, Nama Siswa, Ayah/Ibu, atau Alamat..."
-                className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
-              />
-            </div>
+          {/* Filter Tahun Ajaran */}
+          <div className={category === "left" ? "md:col-span-2" : "md:col-span-2"}>
+            <select
+              value={selectedYearId}
+              onChange={(e) => setSelectedYearId(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            >
+              <option value="ALL">Semua Tahun Ajaran</option>
+              {academicYears.map((ay) => (
+                <option key={ay.id} value={ay.id}>
+                  TA {ay.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Filter Tahun Ajaran */}
+          {/* Filter Kelas / Rombel */}
+          <div className={category === "left" ? "md:col-span-2" : "md:col-span-3"}>
+            <select
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            >
+              <option value="ALL">Semua Kelas</option>
+              {classes.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  Kelas {cls.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filter Sub-Status (Hanya di halaman Siswa Keluar: Pindah / Mutasi vs Keluar / DO) */}
+          {category === "left" && (
             <div className="md:col-span-2">
               <select
-                value={selectedYearId}
-                onChange={(e) => setSelectedYearId(e.target.value)}
+                value={selectedLeftSubStatus}
+                onChange={(e) => setSelectedLeftSubStatus(e.target.value)}
                 className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
               >
-                <option value="ALL">Semua Tahun Ajaran</option>
-                {academicYears.map((ay) => (
-                  <option key={ay.id} value={ay.id}>
-                    TA {ay.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Filter Kelas / Rombel */}
-            <div className="md:col-span-2">
-              <select
-                value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-              >
-                <option value="ALL">Semua Kelas</option>
-                {classes.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    Kelas {cls.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Filter Status Keaktifan */}
-            <div className="md:col-span-2">
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-              >
-                <option value="ALL">Semua Status</option>
-                <option value="ACTIVE">Aktif</option>
-                <option value="GRADUATED">Lulus</option>
+                <option value="ALL">Semua Siswa Keluar</option>
                 <option value="TRANSFERRED">Pindah / Mutasi</option>
                 <option value="DROPPED_OUT">Keluar / DO</option>
               </select>
             </div>
+          )}
 
-            {/* Tombol Reset */}
-            <div className="md:col-span-1">
-              <button
-                type="button"
-                onClick={resetFilters}
-                title="Reset Filter"
-                className="w-full h-10 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center transition"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            </div>
+          {/* Tombol Reset */}
+          <div className="md:col-span-1">
+            <button
+              type="button"
+              onClick={resetFilters}
+              title="Reset Filter"
+              className="w-full h-10 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center transition"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Shadcn UI Data Table */}
-        <div className="rounded-2xl bg-white shadow-xs border border-slate-100 overflow-hidden">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+      {/* Shadcn UI Data Table */}
+      <div className="rounded-2xl bg-white shadow-xs border border-slate-100 overflow-hidden">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
-                    </TableHead>
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableHeader>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-28 text-center text-xs text-slate-400"
+                >
+                  Tidak ada data siswa pada kategori ini yang cocok dengan pencarian / filter.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
 
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-28 text-center text-xs text-slate-400"
-                  >
-                    Tidak ada data siswa yang cocok dengan pencarian / filter.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+        {/* Footer Pagination Data Table */}
+        <div className="px-5 py-3.5 bg-slate-50/60 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
+          <div>
+            Menampilkan{" "}
+            <strong className="text-slate-700">
+              {table.getRowModel().rows.length}
+            </strong>{" "}
+            dari{" "}
+            <strong className="text-slate-700">{filteredData.length}</strong>{" "}
+            siswa pada kategori ini
+          </div>
 
-          {/* Footer Pagination Data Table */}
-          <div className="px-5 py-3.5 bg-slate-50/60 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
-            <div>
-              Menampilkan{" "}
-              <strong className="text-slate-700">
-                {table.getRowModel().rows.length}
-              </strong>{" "}
-              dari{" "}
-              <strong className="text-slate-700">{filteredData.length}</strong>{" "}
-              siswa (Total Buku Induk: {students.length} siswa)
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="h-8 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 inline-flex items-center gap-1 font-semibold text-slate-700"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                Sebelumnya
-              </button>
-              <span className="px-2 font-semibold text-slate-700">
-                Hal {table.getState().pagination.pageIndex + 1} /{" "}
-                {Math.max(1, table.getPageCount())}
-              </span>
-              <button
-                type="button"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="h-8 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 inline-flex items-center gap-1 font-semibold text-slate-700"
-              >
-                Berikutnya
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-8 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 inline-flex items-center gap-1 font-semibold text-slate-700"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Sebelumnya
+            </button>
+            <span className="px-2 font-semibold text-slate-700">
+              Hal {table.getState().pagination.pageIndex + 1} /{" "}
+              {Math.max(1, table.getPageCount())}
+            </span>
+            <button
+              type="button"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-8 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 inline-flex items-center gap-1 font-semibold text-slate-700"
+            >
+              Berikutnya
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       </div>
@@ -607,6 +651,22 @@ export default function StudentsBukuIndukPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+export default function StudentsBukuIndukPage() {
+  return (
+    <AppShell>
+      <Suspense
+        fallback={
+          <div className="p-8 text-center text-xs text-slate-500">
+            Memuat data Buku Induk Siswa...
+          </div>
+        }
+      >
+        <StudentsBukuIndukContent />
+      </Suspense>
     </AppShell>
   );
 }
