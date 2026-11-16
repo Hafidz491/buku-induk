@@ -205,12 +205,25 @@ export default function StudentDetailPage() {
               <p className="text-xs text-slate-500 mt-0.5">
                 Tahun Masuk (Angkatan):{" "}
                 <strong className="text-slate-700">{student.entryYear}</strong>{" "}
-                • Kelas Saat Ini:{" "}
-                <strong className="text-emerald-600">
-                  {currentActiveHistory
-                    ? `${currentActiveHistory.className} (${currentActiveHistory.academicYearName})`
-                    : "Belum Ditempatkan"}
-                </strong>
+                •{" "}
+                {student.status === "GRADUATED" ? (
+                  <>
+                    Tahun Lulus:{" "}
+                    <strong className="text-emerald-600">
+                      {student.graduationYear ||
+                        String(new Date().getFullYear())}
+                    </strong>
+                  </>
+                ) : (
+                  <>
+                    Kelas Saat Ini:{" "}
+                    <strong className="text-emerald-600">
+                      {currentActiveHistory
+                        ? `${currentActiveHistory.className} (${currentActiveHistory.academicYearName})`
+                        : "Belum Ditempatkan"}
+                    </strong>
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -294,6 +307,15 @@ export default function StudentDetailPage() {
                     {renderStatusLabel(student.status)}
                   </dd>
                 </div>
+                {student.status === "GRADUATED" && (
+                  <div>
+                    <dt className="text-slate-400 font-medium">Tahun Lulus</dt>
+                    <dd className="font-bold text-emerald-700 mt-0.5">
+                      {student.graduationYear ||
+                        String(new Date().getFullYear())}
+                    </dd>
+                  </div>
+                )}
               </dl>
             </div>
 

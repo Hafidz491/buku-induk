@@ -98,6 +98,10 @@ export const students = pgTable("students", {
   motherPhone: varchar("mother_phone", { length: 30 }).default("").notNull(),
   entryYear: integer("entry_year").notNull(),
   status: studentStatusEnum("status").default("ACTIVE").notNull(),
+  // Data Khusus Siswa Lulus (Tahun Lulus Otomatis)
+  graduationYear: varchar("graduation_year", { length: 20 })
+    .default("")
+    .notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

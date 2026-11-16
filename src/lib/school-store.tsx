@@ -122,6 +122,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765401",
     entryYear: 2025,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2025-07-10T08:00:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -146,6 +147,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765402",
     entryYear: 2025,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2025-07-10T08:15:00Z"),
     updatedAt: new Date("2025-07-10T08:15:00Z"),
   },
@@ -170,6 +172,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765403",
     entryYear: 2025,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2025-07-11T09:00:00Z"),
     updatedAt: new Date("2025-07-11T09:00:00Z"),
   },
@@ -194,6 +197,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765404",
     entryYear: 2025,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2025-07-11T09:30:00Z"),
     updatedAt: new Date("2025-07-11T09:30:00Z"),
   },
@@ -218,6 +222,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765405",
     entryYear: 2024,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2024-07-12T08:00:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -242,6 +247,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765406",
     entryYear: 2024,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2024-07-12T08:20:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -266,6 +272,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765407",
     entryYear: 2023,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2023-07-14T08:00:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -290,6 +297,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765408",
     entryYear: 2023,
     status: "ACTIVE",
+    graduationYear: "",
     createdAt: new Date("2023-07-14T08:30:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -314,6 +322,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765409",
     entryYear: 2022,
     status: "GRADUATED",
+    graduationYear: "2025",
     createdAt: new Date("2022-07-15T08:00:00Z"),
     updatedAt: new Date("2025-05-20T08:00:00Z"),
   },
@@ -338,6 +347,7 @@ const INITIAL_STUDENTS: Student[] = [
     motherPhone: "081298765410",
     entryYear: 2024,
     status: "TRANSFERRED",
+    graduationYear: "",
     createdAt: new Date("2024-07-12T09:00:00Z"),
     updatedAt: new Date("2025-01-15T08:00:00Z"),
   },
@@ -455,9 +465,10 @@ interface UpdateProfilePayload {
 
 export type StudentFormInput = Omit<
   Student,
-  "id" | "createdAt" | "updatedAt" | "studentPhone"
+  "id" | "createdAt" | "updatedAt" | "studentPhone" | "graduationYear"
 > & {
   studentPhone?: string;
+  graduationYear?: string;
   classId?: string;
   academicYearId?: string;
   statusInClass?: "NEW" | "PROMOTED" | "RETAINED";
@@ -544,6 +555,13 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             parsed.students.map((s: Student) => ({
               ...s,
               studentPhone: s.studentPhone || "",
+              graduationYear:
+                s.graduationYear ||
+                (s.status === "GRADUATED"
+                  ? String(
+                      new Date(s.updatedAt || "2025-05-20T08:00:00Z").getFullYear()
+                    )
+                  : ""),
               createdAt: new Date(s.createdAt),
               updatedAt: new Date(s.updatedAt),
             }))
@@ -667,6 +685,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       motherPhone: (payload.motherPhone || "").trim(),
       entryYear: Number(payload.entryYear),
       status: payload.status,
+      graduationYear:
+        payload.status === "GRADUATED" ? String(now.getFullYear()) : "",
       createdAt: now,
       updatedAt: now,
     };
@@ -742,6 +762,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         motherPhone: (row.motherPhone || "").trim(),
         entryYear: Number(row.entryYear) || now.getFullYear(),
         status: row.status || "ACTIVE",
+        graduationYear:
+          row.status === "GRADUATED" ? String(now.getFullYear()) : "",
         createdAt: now,
         updatedAt: now,
       });
@@ -793,6 +815,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         if (s.status !== "ACTIVE") {
           return s;
         }
+        const isNowGraduated = payload.status === "GRADUATED";
         return {
           ...s,
           nisn: payload.nisn.trim(),
@@ -814,6 +837,9 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           motherPhone: (payload.motherPhone || "").trim(),
           entryYear: Number(payload.entryYear),
           status: payload.status,
+          graduationYear: isNowGraduated
+            ? s.graduationYear || String(now.getFullYear())
+            : s.graduationYear || "",
           updatedAt: now,
         };
       })

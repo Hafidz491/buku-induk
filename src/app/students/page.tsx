@@ -70,10 +70,32 @@ function StudentsBukuIndukContent() {
   const [selectedClassId, setSelectedClassId] = useState<string>("ALL");
   const [selectedLeftSubStatus, setSelectedLeftSubStatus] =
     useState<string>("ALL");
+  const [selectedGraduationYear, setSelectedGraduationYear] =
+    useState<string>("ALL");
 
   useEffect(() => {
     setSelectedLeftSubStatus("ALL");
+    setSelectedGraduationYear("ALL");
   }, [category]);
+
+  // Daftar opsi Tahun Lulus untuk filter di halaman Siswa Lulus
+  const graduationYearOptions = useMemo(() => {
+    const yearsSet = new Set<string>();
+    academicYears.forEach((ay) => {
+      const parts = ay.name.split("/");
+      const gradYr = (parts[1] || parts[0] || "").trim();
+      if (/^\d{4}$/.test(gradYr)) {
+        yearsSet.add(gradYr);
+      }
+    });
+    students.forEach((s) => {
+      if (s.status === "GRADUATED") {
+        const yr = (s.graduationYear || String(new Date().getFullYear())).trim();
+        if (yr) yearsSet.add(yr);
+      }
+    });
+    return Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
+  }, [academicYears, students]);
 
   // State Modal Tambah / Edit, Import Excel, & Konfirmasi Hapus
   const [modalOpen, setModalOpen] = useState(false);
@@ -134,20 +156,33 @@ function StudentsBukuIndukContent() {
           item.village.toLowerCase().includes(q) ||
           item.district.toLowerCase().includes(q) ||
           item.city.toLowerCase().includes(q) ||
-          item.birthPlace.toLowerCase().includes(q);
+          item.birthPlace.toLowerCase().includes(q) ||
+          (item.graduationYear &&
+            item.graduationYear.toLowerCase().includes(q));
         if (!matchSearch) return false;
       }
 
-      if (selectedYearId !== "ALL" && selectedClassId !== "ALL") {
-        const inYearAndClass = classHistory.some(
-          (h) =>
-            h.studentId === item.id &&
-            h.academicYearId === selectedYearId &&
-            h.classId === selectedClassId
-        );
-        if (!inYearAndClass) return false;
-      } else if (selectedClassId !== "ALL") {
-        if (item.currentClassId !== selectedClassId) return false;
+      if (category !== "graduated") {
+        if (selectedYearId !== "ALL" && selectedClassId !== "ALL") {
+          const inYearAndClass = classHistory.some(
+            (h) =>
+              h.studentId === item.id &&
+              h.academicYearId === selectedYearId &&
+              h.classId === selectedClassId
+          );
+          if (!inYearAndClass) return false;
+        } else if (selectedClassId !== "ALL") {
+          if (item.currentClassId !== selectedClassId) return false;
+        }
+      } else {
+        const studentGradYear =
+          item.graduationYear || String(new Date().getFullYear());
+        if (
+          selectedGraduationYear !== "ALL" &&
+          studentGradYear !== selectedGraduationYear
+        ) {
+          return false;
+        }
       }
 
       if (
@@ -167,6 +202,7 @@ function StudentsBukuIndukContent() {
     selectedClassId,
     category,
     selectedLeftSubStatus,
+    selectedGraduationYear,
     classHistory,
   ]);
 
@@ -305,24 +341,57 @@ function StudentsBukuIndukContent() {
           </p>
         ),
       },
-      {
-        accessorKey: "currentClassName",
-        header: "Kelas / Rombel",
-        cell: ({ row }) => (
-          <div>
-            {row.original.currentClassId ? (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-800">
-                {row.original.currentClassName}
-              </span>
-            ) : (
-              <span className="text-xs text-slate-400">-</span>
-            )}
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Angkatan {row.original.entryYear}
-            </p>
-          </div>
-        ),
-      },
+      ...(category === "graduated"
+        ? ([
+            {
+              id: "graduationYear",
+              accessorFn: (row) =>
+                Number(row.graduationYear || new Date().getFullYear()),
+              header: ({ column }) => (
+                <button
+                  type="button"
+                  onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === "asc")
+                  }
+                  className="inline-flex items-center gap-1 hover:text-slate-900"
+                >
+                  <span>Tahun Lulus</span>
+                  <ArrowUpDown className="h-3.5 w-3.5" />
+                </button>
+              ),
+              cell: ({ row }) => (
+                <div>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {row.original.graduationYear ||
+                      String(new Date().getFullYear())}
+                  </span>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    Angkatan {row.original.entryYear}
+                  </p>
+                </div>
+              ),
+            },
+          ] as ColumnDef<EnrichedStudent>[])
+        : ([
+            {
+              accessorKey: "currentClassName",
+              header: "Kelas / Rombel",
+              cell: ({ row }) => (
+                <div>
+                  {row.original.currentClassId ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-800">
+                      {row.original.currentClassName}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">-</span>
+                  )}
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    Angkatan {row.original.entryYear}
+                  </p>
+                </div>
+              ),
+            },
+          ] as ColumnDef<EnrichedStudent>[])),
       {
         accessorKey: "status",
         header: "Status",
@@ -391,6 +460,7 @@ function StudentsBukuIndukContent() {
     setSelectedYearId(activeAcademicYear?.id || "ALL");
     setSelectedClassId("ALL");
     setSelectedLeftSubStatus("ALL");
+    setSelectedGraduationYear("ALL");
   };
 
   const pageTitle =
@@ -453,7 +523,11 @@ function StudentsBukuIndukContent() {
           {/* Input Search Instan */}
           <div
             className={`${
-              category === "left" ? "md:col-span-5" : "md:col-span-6"
+              category === "left"
+                ? "md:col-span-5"
+                : category === "graduated"
+                ? "md:col-span-8"
+                : "md:col-span-6"
             } relative`}
           >
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -461,42 +535,73 @@ function StudentsBukuIndukContent() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari NISN, NIS, Nama Siswa, Ayah/Ibu, atau Alamat..."
+              placeholder={
+                category === "graduated"
+                  ? "Cari NISN, NIS, Nama Siswa, Tahun Lulus, atau Alamat..."
+                  : "Cari NISN, NIS, Nama Siswa, Ayah/Ibu, atau Alamat..."
+              }
               className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
             />
           </div>
 
-          {/* Filter Tahun Ajaran */}
-          <div className={category === "left" ? "md:col-span-2" : "md:col-span-2"}>
-            <select
-              value={selectedYearId}
-              onChange={(e) => setSelectedYearId(e.target.value)}
-              className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-            >
-              <option value="ALL">Semua Tahun Ajaran</option>
-              {academicYears.map((ay) => (
-                <option key={ay.id} value={ay.id}>
-                  TA {ay.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {category !== "graduated" ? (
+            <>
+              {/* Filter Tahun Ajaran */}
+              <div
+                className={
+                  category === "left" ? "md:col-span-2" : "md:col-span-2"
+                }
+              >
+                <select
+                  value={selectedYearId}
+                  onChange={(e) => setSelectedYearId(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                >
+                  <option value="ALL">Semua Tahun Ajaran</option>
+                  {academicYears.map((ay) => (
+                    <option key={ay.id} value={ay.id}>
+                      TA {ay.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Filter Kelas / Rombel */}
-          <div className={category === "left" ? "md:col-span-2" : "md:col-span-3"}>
-            <select
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-              className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-            >
-              <option value="ALL">Semua Kelas</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  Kelas {cls.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              {/* Filter Kelas / Rombel */}
+              <div
+                className={
+                  category === "left" ? "md:col-span-2" : "md:col-span-3"
+                }
+              >
+                <select
+                  value={selectedClassId}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                >
+                  <option value="ALL">Semua Kelas</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.id}>
+                      Kelas {cls.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <div className="md:col-span-3">
+              <select
+                value={selectedGraduationYear}
+                onChange={(e) => setSelectedGraduationYear(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              >
+                <option value="ALL">Semua Tahun Lulus</option>
+                {graduationYearOptions.map((yr) => (
+                  <option key={yr} value={yr}>
+                    Tahun Lulus {yr}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Filter Sub-Status (Hanya di halaman Siswa Keluar: Pindah / Mutasi vs Keluar / DO) */}
           {category === "left" && (

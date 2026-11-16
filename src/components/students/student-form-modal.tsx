@@ -585,8 +585,12 @@ export function StudentFormModal({
             </div>
           </div>
 
-          {/* BAGIAN 4: TAHUN MASUK & STATUS KEAKTIFAN */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* BAGIAN 4: TAHUN MASUK, TAHUN LULUS (KHUSUS LULUS), & STATUS KEAKTIFAN */}
+          <div
+            className={`grid grid-cols-1 ${
+              isGraduatedStudent ? "sm:grid-cols-3" : "sm:grid-cols-2"
+            } gap-4`}
+          >
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Tahun Masuk Sekolah <span className="text-rose-500">*</span>
@@ -602,6 +606,23 @@ export function StudentFormModal({
                 className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
               />
             </div>
+
+            {isGraduatedStudent && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Tahun Lulus (Otomatis)
+                </label>
+                <input
+                  type="text"
+                  disabled={true}
+                  value={
+                    editingStudent?.graduationYear ||
+                    String(new Date().getFullYear())
+                  }
+                  className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-bold"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
