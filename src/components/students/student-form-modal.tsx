@@ -9,6 +9,7 @@ import {
   Users,
   AlertTriangle,
   Lock,
+  GraduationCap,
 } from "lucide-react";
 import type { Student } from "@/db/schema";
 import { useSchool, type StudentFormInput } from "@/lib/school-store";
@@ -52,6 +53,10 @@ export function StudentFormModal({
   const [status, setStatus] = useState<
     "ACTIVE" | "GRADUATED" | "DROPPED_OUT" | "TRANSFERRED"
   >("ACTIVE");
+  const [graduationTrack, setGraduationTrack] = useState<
+    "" | "KULIAH" | "TUGAS"
+  >("");
+  const [universityName, setUniversityName] = useState("");
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirmStatusChangeOpen, setConfirmStatusChangeOpen] = useState(false);
@@ -87,6 +92,10 @@ export function StudentFormModal({
       setMotherPhone(editingStudent.motherPhone);
       setEntryYear(editingStudent.entryYear);
       setStatus(editingStudent.status);
+      setGraduationTrack(
+        (editingStudent.graduationTrack || "") as "" | "KULIAH" | "TUGAS"
+      );
+      setUniversityName(editingStudent.universityName || "");
     } else {
       setNisn("");
       setNis("");
@@ -107,6 +116,8 @@ export function StudentFormModal({
       setMotherPhone("");
       setEntryYear(2025);
       setStatus("ACTIVE");
+      setGraduationTrack("");
+      setUniversityName("");
     }
   }, [editingStudent, open]);
 
@@ -153,6 +164,9 @@ export function StudentFormModal({
       motherPhone,
       entryYear: Number(entryYear),
       status: finalStatus,
+      graduationTrack,
+      universityName:
+        graduationTrack === "KULIAH" ? universityName.trim() : "",
     };
 
     if (editingStudent) {
@@ -174,8 +188,12 @@ export function StudentFormModal({
       return;
     }
 
-    // Jika siswa sudah LULUS, langsung simpan nomor telepon saja
+    // Jika siswa sudah LULUS, validasi bila memilih Kuliah maka Nama Universitas wajib diisi
     if (isGraduatedStudent) {
+      if (graduationTrack === "KULIAH" && !universityName.trim()) {
+        setErrorMsg("Nama Universitas wajib diisi jika memilih Jejak Kelulusan Kuliah.");
+        return;
+      }
       executeSave();
       return;
     }
@@ -263,7 +281,7 @@ export function StudentFormModal({
               <span>
                 {isGraduatedStudent ? (
                   <>
-                    Siswa ini berstatus <strong>LULUS</strong>. Data utama buku induk sudah dikunci permanen, dan hanya kolom <strong>Nomor Telepon</strong> yang dapat diisi/diubah.
+                    Siswa ini berstatus <strong>LULUS</strong>. Data utama buku induk sudah dikunci permanen, dan hanya kolom <strong>Nomor Telepon</strong> serta <strong>Jejak Kelulusan</strong> yang dapat diisi/diubah.
                   </>
                 ) : (
                   <>
@@ -657,6 +675,57 @@ export function StudentFormModal({
               )}
             </div>
           </div>
+
+          {/* BAGIAN 5: JEJAK KELULUSAN (KHUSUS SISWA LULUS - DAPAT DIEDIT) */}
+          {isGraduatedStudent && (
+            <div className="rounded-xl bg-emerald-50/60 border-2 border-emerald-300 p-4 space-y-3.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                <GraduationCap className="h-4 w-4 text-emerald-600" />
+                <span>4. Jejak Kelulusan Siswa</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-emerald-800 mb-1">
+                    Jejak Kelulusan
+                  </label>
+                  <select
+                    disabled={false}
+                    value={graduationTrack}
+                    onChange={(e) => {
+                      const val = e.target.value as "" | "KULIAH" | "TUGAS";
+                      setGraduationTrack(val);
+                      if (val !== "KULIAH") {
+                        setUniversityName("");
+                      }
+                    }}
+                    className="w-full h-9 px-3 rounded-lg bg-white border-2 border-emerald-400 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                  >
+                    <option value="">-- Pilih Jejak Kelulusan --</option>
+                    <option value="KULIAH">Kuliah</option>
+                    <option value="TUGAS">Tugas</option>
+                  </select>
+                </div>
+
+                {graduationTrack === "KULIAH" && (
+                  <div>
+                    <label className="block text-xs font-bold text-emerald-800 mb-1">
+                      Nama Universitas <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      disabled={false}
+                      value={universityName}
+                      onChange={(e) => setUniversityName(e.target.value)}
+                      placeholder="Masukkan nama universitas / perguruan tinggi"
+                      className="w-full h-9 px-3 rounded-lg bg-white border-2 border-emerald-400 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Tombol Aksi */}
           <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">

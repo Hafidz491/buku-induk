@@ -123,6 +123,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2025,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2025-07-10T08:00:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -148,6 +150,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2025,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2025-07-10T08:15:00Z"),
     updatedAt: new Date("2025-07-10T08:15:00Z"),
   },
@@ -173,6 +177,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2025,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2025-07-11T09:00:00Z"),
     updatedAt: new Date("2025-07-11T09:00:00Z"),
   },
@@ -198,6 +204,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2025,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2025-07-11T09:30:00Z"),
     updatedAt: new Date("2025-07-11T09:30:00Z"),
   },
@@ -223,6 +231,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2024,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2024-07-12T08:00:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -248,6 +258,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2024,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2024-07-12T08:20:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -273,6 +285,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2023,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2023-07-14T08:00:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -298,6 +312,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2023,
     status: "ACTIVE",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2023-07-14T08:30:00Z"),
     updatedAt: new Date("2025-07-10T08:00:00Z"),
   },
@@ -323,6 +339,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2022,
     status: "GRADUATED",
     graduationYear: "2025",
+    graduationTrack: "KULIAH",
+    universityName: "Universitas Lampung",
     createdAt: new Date("2022-07-15T08:00:00Z"),
     updatedAt: new Date("2025-05-20T08:00:00Z"),
   },
@@ -348,6 +366,8 @@ const INITIAL_STUDENTS: Student[] = [
     entryYear: 2024,
     status: "TRANSFERRED",
     graduationYear: "",
+    graduationTrack: "",
+    universityName: "",
     createdAt: new Date("2024-07-12T09:00:00Z"),
     updatedAt: new Date("2025-01-15T08:00:00Z"),
   },
@@ -465,10 +485,18 @@ interface UpdateProfilePayload {
 
 export type StudentFormInput = Omit<
   Student,
-  "id" | "createdAt" | "updatedAt" | "studentPhone" | "graduationYear"
+  | "id"
+  | "createdAt"
+  | "updatedAt"
+  | "studentPhone"
+  | "graduationYear"
+  | "graduationTrack"
+  | "universityName"
 > & {
   studentPhone?: string;
   graduationYear?: string;
+  graduationTrack?: string;
+  universityName?: string;
   classId?: string;
   academicYearId?: string;
   statusInClass?: "NEW" | "PROMOTED" | "RETAINED";
@@ -562,6 +590,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
                       new Date(s.updatedAt || "2025-05-20T08:00:00Z").getFullYear()
                     )
                   : ""),
+              graduationTrack: s.graduationTrack || "",
+              universityName: s.universityName || "",
               createdAt: new Date(s.createdAt),
               updatedAt: new Date(s.updatedAt),
             }))
@@ -687,6 +717,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       status: payload.status,
       graduationYear:
         payload.status === "GRADUATED" ? String(now.getFullYear()) : "",
+      graduationTrack: "",
+      universityName: "",
       createdAt: now,
       updatedAt: now,
     };
@@ -764,6 +796,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         status: row.status || "ACTIVE",
         graduationYear:
           row.status === "GRADUATED" ? String(now.getFullYear()) : "",
+        graduationTrack: "",
+        universityName: "",
         createdAt: now,
         updatedAt: now,
       });
@@ -803,11 +837,17 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     setStudents((prev) =>
       prev.map((s) => {
         if (s.id !== id) return s;
-        // Jika siswa sudah LULUS (GRADUATED), hanya kolom Nomor Telepon Siswa (studentPhone) yang dapat diubah
+        // Jika siswa sudah LULUS (GRADUATED), hanya Nomor Telepon Siswa dan Jejak Kelulusan yang dapat diubah
         if (s.status === "GRADUATED") {
+          const nextTrack = payload.graduationTrack ?? s.graduationTrack ?? "";
           return {
             ...s,
             studentPhone: (payload.studentPhone ?? s.studentPhone ?? "").trim(),
+            graduationTrack: nextTrack,
+            universityName:
+              nextTrack === "KULIAH"
+                ? (payload.universityName ?? s.universityName ?? "").trim()
+                : "",
             updatedAt: now,
           };
         }

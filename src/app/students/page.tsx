@@ -72,10 +72,13 @@ function StudentsBukuIndukContent() {
     useState<string>("ALL");
   const [selectedGraduationYear, setSelectedGraduationYear] =
     useState<string>("ALL");
+  const [selectedGraduationTrack, setSelectedGraduationTrack] =
+    useState<string>("ALL");
 
   useEffect(() => {
     setSelectedLeftSubStatus("ALL");
     setSelectedGraduationYear("ALL");
+    setSelectedGraduationTrack("ALL");
   }, [category]);
 
   // Daftar opsi Tahun Lulus untuk filter di halaman Siswa Lulus
@@ -157,6 +160,8 @@ function StudentsBukuIndukContent() {
           item.district.toLowerCase().includes(q) ||
           item.city.toLowerCase().includes(q) ||
           item.birthPlace.toLowerCase().includes(q) ||
+          (item.universityName &&
+            item.universityName.toLowerCase().includes(q)) ||
           (item.graduationYear &&
             item.graduationYear.toLowerCase().includes(q));
         if (!matchSearch) return false;
@@ -183,6 +188,12 @@ function StudentsBukuIndukContent() {
         ) {
           return false;
         }
+        if (
+          selectedGraduationTrack !== "ALL" &&
+          item.graduationTrack !== selectedGraduationTrack
+        ) {
+          return false;
+        }
       }
 
       if (
@@ -203,6 +214,7 @@ function StudentsBukuIndukContent() {
     category,
     selectedLeftSubStatus,
     selectedGraduationYear,
+    selectedGraduationTrack,
     classHistory,
   ]);
 
@@ -371,6 +383,36 @@ function StudentsBukuIndukContent() {
                 </div>
               ),
             },
+            {
+              accessorKey: "graduationTrack",
+              header: "Jejak Kelulusan",
+              cell: ({ row }) => {
+                const track = row.original.graduationTrack;
+                const univ = row.original.universityName;
+                if (track === "KULIAH") {
+                  return (
+                    <div>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-sky-100 text-sky-700">
+                        Kuliah
+                      </span>
+                      {univ && (
+                        <p className="text-xs font-semibold text-slate-700 mt-0.5">
+                          {univ}
+                        </p>
+                      )}
+                    </div>
+                  );
+                }
+                if (track === "TUGAS") {
+                  return (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-700">
+                      Tugas
+                    </span>
+                  );
+                }
+                return <span className="text-xs text-slate-400">-</span>;
+              },
+            },
           ] as ColumnDef<EnrichedStudent>[])
         : ([
             {
@@ -461,6 +503,7 @@ function StudentsBukuIndukContent() {
     setSelectedClassId("ALL");
     setSelectedLeftSubStatus("ALL");
     setSelectedGraduationYear("ALL");
+    setSelectedGraduationTrack("ALL");
   };
 
   const pageTitle =
@@ -526,7 +569,7 @@ function StudentsBukuIndukContent() {
               category === "left"
                 ? "md:col-span-5"
                 : category === "graduated"
-                ? "md:col-span-8"
+                ? "md:col-span-6"
                 : "md:col-span-6"
             } relative`}
           >
@@ -537,7 +580,7 @@ function StudentsBukuIndukContent() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
                 category === "graduated"
-                  ? "Cari NISN, NIS, Nama Siswa, Tahun Lulus, atau Alamat..."
+                  ? "Cari NISN, NIS, Nama Siswa, Tahun Lulus, Universitas, atau Alamat..."
                   : "Cari NISN, NIS, Nama Siswa, Ayah/Ibu, atau Alamat..."
               }
               className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
@@ -587,20 +630,36 @@ function StudentsBukuIndukContent() {
               </div>
             </>
           ) : (
-            <div className="md:col-span-3">
-              <select
-                value={selectedGraduationYear}
-                onChange={(e) => setSelectedGraduationYear(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-              >
-                <option value="ALL">Semua Tahun Lulus</option>
-                {graduationYearOptions.map((yr) => (
-                  <option key={yr} value={yr}>
-                    Tahun Lulus {yr}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <>
+              {/* Filter Tahun Lulus */}
+              <div className="md:col-span-2">
+                <select
+                  value={selectedGraduationYear}
+                  onChange={(e) => setSelectedGraduationYear(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                >
+                  <option value="ALL">Semua Tahun Lulus</option>
+                  {graduationYearOptions.map((yr) => (
+                    <option key={yr} value={yr}>
+                      Tahun Lulus {yr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filter Jejak Kelulusan */}
+              <div className="md:col-span-3">
+                <select
+                  value={selectedGraduationTrack}
+                  onChange={(e) => setSelectedGraduationTrack(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                >
+                  <option value="ALL">Semua Jejak Kelulusan</option>
+                  <option value="KULIAH">Kuliah</option>
+                  <option value="TUGAS">Tugas</option>
+                </select>
+              </div>
+            </>
           )}
 
           {/* Filter Sub-Status (Hanya di halaman Siswa Keluar: Pindah / Mutasi vs Keluar / DO) */}

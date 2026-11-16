@@ -308,13 +308,33 @@ export default function StudentDetailPage() {
                   </dd>
                 </div>
                 {student.status === "GRADUATED" && (
-                  <div>
-                    <dt className="text-slate-400 font-medium">Tahun Lulus</dt>
-                    <dd className="font-bold text-emerald-700 mt-0.5">
-                      {student.graduationYear ||
-                        String(new Date().getFullYear())}
-                    </dd>
-                  </div>
+                  <>
+                    <div>
+                      <dt className="text-slate-400 font-medium">
+                        Tahun Lulus
+                      </dt>
+                      <dd className="font-bold text-emerald-700 mt-0.5">
+                        {student.graduationYear ||
+                          String(new Date().getFullYear())}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-400 font-medium">
+                        Jejak Kelulusan
+                      </dt>
+                      <dd className="font-bold text-slate-800 mt-0.5">
+                        {student.graduationTrack === "KULIAH"
+                          ? `Kuliah${
+                              student.universityName
+                                ? ` — ${student.universityName}`
+                                : ""
+                            }`
+                          : student.graduationTrack === "TUGAS"
+                          ? "Tugas"
+                          : "-"}
+                      </dd>
+                    </div>
+                  </>
                 )}
               </dl>
             </div>
